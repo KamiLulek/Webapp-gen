@@ -133,19 +133,19 @@ Dostępne flagi do wyboru podczas instalacji:
 Flaga	Opis	Domyślnie
 ```
 --disable-features=Translate,OptimizationGuide
-                    Wyłącza tłumacz Google i podpowiedzi	  ✅
+                                   ✅ Wyłącza tłumacz Google i podpowiedzi
 --disable-background-networking
-                    Wyłącza zbędny ruch sieciowy w tle	    ✅
+                                   ✅ Wyłącza zbędny ruch sieciowy w tle
 --disable-extensions
-                    Wyłącza wszystkie rozszerzenia	        ❌
+                                   ❌ Wyłącza wszystkie rozszerzenia	        
 --disable-sync
-                    Wyłącza synchronizację z kontem Google	❌
+                                   ❌ Wyłącza synchronizację z kontem Google
 --disable-gpu
-                    Wyłącza akcelerację sprzętową GPU	      ❌
+                                   ❌ Wyłącza akcelerację sprzętową GPU
 --incognito
-                    Tryb incognito za każdym razem	        ❌
+                                   ❌ Tryb incognito za każdym razem
 --start-maximized
-                    Startuje okno zmaksymalizowane	        ❌
+                                   ❌ Startuje okno zmaksymalizowane
 ```
 
 
