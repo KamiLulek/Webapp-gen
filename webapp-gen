@@ -274,26 +274,100 @@ cmd_remove() {
     fi
 }
 
+cmd_edit() {
+    echo ""
+    echo "=== Edycja istniejącej appki ==="
+    echo ""
+
+    # Pokaż listę
+    local apps=()
+    local i=1
+    for dir in "$WRAPPER_BASE"/*/; do
+        local nazwa_dir
+        nazwa_dir=$(basename "$dir")
+        local cfg="${dir}${nazwa_dir}.cfg"
+
+        if [[ -f "$cfg" ]]; then
+            source "$cfg"
+            apps+=("$NAZWA")
+            echo "$i. $NAZWA"
+            ((i++))
+        fi
+    done
+
+    if [[ ${#apps[@]} -eq 0 ]]; then
+        echo "Brak appek do edycji."
+        return 0
+    fi
+
+    echo ""
+    read -p "Podaj numer appki do edycji: " num
+
+    if [[ ! "$num" =~ ^[0-9]+$ ]] || [[ "$num" -lt 1 ]] || [[ "$num" -gt ${#apps[@]} ]]; then
+        echo "Błędny numer!"
+        return 1
+    fi
+
+    local NAZWA="${apps[$((num-1))]}"
+    local CFG="${WRAPPER_BASE}/${NAZWA}/${NAZWA}.cfg"
+    source "$CFG"
+
+    echo ""
+    echo "Edycja: $NAZWA"
+    echo "Obecny URL: $URL"
+    echo ""
+
+    read -p "Nowy URL (ENTER = zostaw obecny): " NEW_URL
+    [[ -z "$NEW_URL" ]] && NEW_URL="$URL"
+
+    echo ""
+    echo "Obecne flagi: $FLAGS"
+    echo ""
+
+    # Pobierz nowe flagi
+    FLAGS=$(ask_flags)
+
+    echo ""
+    echo "Podaj ścieżkę do nowej ikony (ENTER = zostaw obecną):"
+    read -p "> " ICON_SRC
+
+    local ICON_LINE="$ICON"
+    if [[ -n "$ICON_SRC" && -f "$ICON_SRC" ]]; then
+        local EXT="${ICON_SRC##*.}"
+        local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
+        cp "$ICON_SRC" "$ICON_DEST"
+        ICON_LINE="$ICON_DEST"
+        echo "Ikona zaktualizowana: $ICON_LINE"
+    elif [[ -n "$ICON_SRC" ]]; then
+        echo "Ostrzeżenie: Plik '$ICON_SRC' nie istnieje. Zostawiam obecną ikonę."
+    fi
+
+    echo ""
+    write_files "$NAZWA" "$NEW_URL" "$ICON_LINE" "$FLAGS"
+    echo "Zaktualizowano: ${NAZWA}"
+}
+
 main_menu() {
     echo ""
     echo "=== webapp-gen ==="
     echo "1. Instaluj nową appkę"
     echo "2. Lista zainstalowanych"
-    echo "3. Usuń appkę"
-    echo "4. Wyjście"
+    echo "3. Edytuj appkę"
+    echo "4. Usuń appkę"
+    echo "5. Wyjście"
     echo ""
 
-    read -p "Wybierz opcję [1-4]: " choice
+    read -p "Wybierz opcję [1-5]: " choice
 
     case "$choice" in
         1) cmd_install ;;
         2) cmd_list ;;
-        3) cmd_remove ;;
-        4) echo "Do widzenia!"; exit 0 ;;
+        3) cmd_edit ;;
+        4) cmd_remove ;;
+        5) echo "Do widzenia!"; exit 0 ;;
         *) echo "Nieprawidłowa opcja!" ;;
     esac
 }
-
 case "$1" in
     -list) cmd_list ;;
     -remove) cmd_remove ;;
