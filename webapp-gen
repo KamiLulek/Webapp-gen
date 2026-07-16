@@ -1,0 +1,245 @@
+#!/bin/bash
+# webapp-gen — generator appek webowych (chromium --app) jako osobne procesy
+# Komendy:
+#   webapp-gen install          -> kreator z okienkami (zenity)
+#   webapp-gen -list            -> lista zainstalowanych
+#   webapp-gen -edit <nazwa>    -> edycja configu istniejącej appki
+#   webapp-gen -remove <nazwa>  -> usunięcie appki
+#
+# Uwaga: skrypt NIE wymaga uruchamiania przez sudo. Root jest potrzebny tylko
+# do zapisu w /usr/local/bin/webapp-list — w tym momencie skrypt sam odpala
+# pkexec i wyskakuje graficzne okienko na hasło. Reszta (ikony, .desktop)
+# leci jako zwykły user.
+
+set -e
+
+WRAPPER_BASE="/usr/local/bin/webapp-list"
+USER_HOME="${SUDO_USER:+/home/$SUDO_USER}"
+USER_HOME="${USER_HOME:-$HOME}"
+DESKTOP_DIR="${USER_HOME}/.local/share/applications"
+ICON_DIR="${USER_HOME}/.local/share/icons/webapp-ico"
+
+need_zenity() {
+    if ! command -v zenity &>/dev/null; then
+        echo "Brak zenity. Zainstaluj: sudo pacman -S zenity"
+        exit 1
+    fi
+}
+
+need_pkexec() {
+    if ! command -v pkexec &>/dev/null; then
+        echo "Brak pkexec (polkit). Zainstaluj: sudo pacman -S polkit"
+        exit 1
+    fi
+}
+
+# --- Domyślne dostępne flagi do checklisty ---
+# format: TRUE/FALSE | flaga | opis
+FLAG_CATALOG=(
+    "TRUE"  "--disable-features=Translate,OptimizationGuide" "Wyłącz tłumacz i podpowiedzi Google"
+    "TRUE"  "--disable-background-networking"                "Wyłącz zbędny ruch w tle"
+    "FALSE" "--disable-extensions"                            "Wyłącz rozszerzenia chromium"
+    "FALSE" "--disable-sync"                                  "Wyłącz synchronizację kont Google"
+    "FALSE" "--disable-gpu"                                   "Wyłącz akcelerację GPU"
+    "FALSE" "--incognito"                                     "Tryb incognito za każdym razem"
+    "FALSE" "--start-maximized"                                "Startuj zmaksymalizowane okno"
+)
+
+pick_flags() {
+    zenity --list --title="Flagi chromium" --text="Zaznacz flagi dla tej appki" \
+        --checklist --column="Wybierz" --column="Flaga" --column="Opis" \
+        --separator="§" --width=650 --height=400 \
+        "${FLAG_CATALOG[@]}"
+}
+
+# Zapisuje wrapper + cfg w /usr/local/bin/webapp-list/<nazwa>/ przez pkexec.
+# Zapis do tymczasowych plików jako zwykły user, potem pkexec tylko je
+# przenosi na miejsce — root nie widzi żadnego dynamicznego bash -c z Twoimi
+# danymi wklejonymi w linię komend.
+write_root_files() {
+    local NAZWA="$1" WRAPPER_CONTENT="$2" CFG_CONTENT="$3"
+    local APP_DIR="${WRAPPER_BASE}/${NAZWA}"
+
+    local TMP_WRAPPER TMP_CFG
+    TMP_WRAPPER=$(mktemp)
+    TMP_CFG=$(mktemp)
+    printf '%s' "$WRAPPER_CONTENT" > "$TMP_WRAPPER"
+    printf '%s' "$CFG_CONTENT" > "$TMP_CFG"
+
+    need_pkexec
+    pkexec bash -c '
+        set -e
+        mkdir -p "$1"
+        install -m 755 "$2" "$1/$3-app"
+        install -m 644 "$4" "$1/$3.cfg"
+    ' _ "$APP_DIR" "$TMP_WRAPPER" "$NAZWA" "$TMP_CFG"
+
+    rm -f "$TMP_WRAPPER" "$TMP_CFG"
+}
+
+write_files() {
+    local NAZWA="$1" URL="$2" ICON_LINE="$3" FLAGS="$4"
+    local APP_DIR="${WRAPPER_BASE}/${NAZWA}"
+    local WRAPPER="${APP_DIR}/${NAZWA}-app"
+    local CFG="${APP_DIR}/${NAZWA}.cfg"
+    local DESKTOP_FILE="${DESKTOP_DIR}/${NAZWA}.desktop"
+
+    mkdir -p "$DESKTOP_DIR" "$ICON_DIR"
+
+    local CFG_CONTENT WRAPPER_CONTENT
+    CFG_CONTENT=$(cat << EOF
+NAZWA="${NAZWA}"
+URL="${URL}"
+ICON="${ICON_LINE}"
+FLAGS="${FLAGS}"
+EOF
+)
+    WRAPPER_CONTENT=$(cat << EOF
+#!/bin/bash
+source "${CFG}"
+chromium --class=\${NAZWA} \${FLAGS} \\
+         --user-data-dir=${USER_HOME}/.config/\${NAZWA}-app \\
+         --app=\${URL}
+EOF
+)
+
+    write_root_files "$NAZWA" "$WRAPPER_CONTENT" "$CFG_CONTENT"
+
+    tee "$DESKTOP_FILE" > /dev/null << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=${NAZWA}
+Comment=${NAZWA} webapp
+Exec=${WRAPPER}
+Icon=${ICON_LINE:-applications-internet}
+Categories=Network;GTK;
+Terminal=false
+StartupNotify=true
+StartupWMClass=${NAZWA}
+EOF
+    chmod +x "$DESKTOP_FILE"
+    update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+
+    echo "Gotowe: ${NAZWA}"
+    echo "  Folder:   ${APP_DIR}"
+    echo "  Wrapper:  ${WRAPPER}"
+    echo "  Cfg:      ${CFG}"
+    echo "  Desktop:  ${DESKTOP_FILE}"
+}
+
+cmd_install() {
+    need_zenity
+
+    local FORM
+    FORM=$(zenity --forms --title="Nowa appka webowa" \
+        --text="Podaj dane" --separator="|" \
+        --add-entry="Nazwa (bez spacji)" \
+        --add-entry="URL") || exit 1
+
+    local NAZWA URL
+    NAZWA=$(echo "$FORM" | cut -d'|' -f1 | tr -d ' ')
+    URL=$(echo "$FORM" | cut -d'|' -f2)
+
+    if [[ -z "$NAZWA" || -z "$URL" ]]; then
+        zenity --error --text="Nazwa i URL są wymagane."
+        exit 1
+    fi
+
+    if [[ -d "${WRAPPER_BASE}/${NAZWA}" ]]; then
+        zenity --error --text="Appka '${NAZWA}' już istnieje. Użyj -edit."
+        exit 1
+    fi
+
+    local FLAGS_RAW FLAGS
+    FLAGS_RAW=$(pick_flags) || FLAGS_RAW=""
+    FLAGS=$(echo "$FLAGS_RAW" | tr '§' ' ')
+
+    local ICON_SRC ICON_LINE=""
+    ICON_SRC=$(zenity --file-selection --title="Wybierz ikonę (.ico/.svg/.png) — Anuluj = brak ikony" 2>/dev/null || true)
+    if [[ -n "$ICON_SRC" && -f "$ICON_SRC" ]]; then
+        local EXT="${ICON_SRC##*.}"
+        local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
+        cp "$ICON_SRC" "$ICON_DEST"
+        ICON_LINE="$ICON_DEST"
+    fi
+
+    write_files "$NAZWA" "$URL" "$ICON_LINE" "$FLAGS"
+    zenity --info --text="Zainstalowano: ${NAZWA}"
+}
+
+cmd_edit() {
+    need_zenity
+    local NAZWA="$1"
+    local CFG="${WRAPPER_BASE}/${NAZWA}/${NAZWA}.cfg"
+    [[ -f "$CFG" ]] || { echo "Brak appki: ${NAZWA}"; exit 1; }
+    source "$CFG"
+
+    local FORM
+    FORM=$(zenity --forms --title="Edycja: ${NAZWA}" --separator="|" \
+        --add-entry="URL (obecny: ${URL})") || exit 1
+    local NEW_URL
+    NEW_URL=$(echo "$FORM" | cut -d'|' -f1)
+    [[ -z "$NEW_URL" ]] && NEW_URL="$URL"
+
+    local FLAGS_RAW FLAGS
+    FLAGS_RAW=$(pick_flags) || FLAGS_RAW="$FLAGS"
+    FLAGS=$(echo "$FLAGS_RAW" | tr '§' ' ')
+
+    local ICON_SRC ICON_LINE="$ICON"
+    ICON_SRC=$(zenity --file-selection --title="Nowa ikona — Anuluj = zostaw obecną" 2>/dev/null || true)
+    if [[ -n "$ICON_SRC" && -f "$ICON_SRC" ]]; then
+        local EXT="${ICON_SRC##*.}"
+        local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
+        cp "$ICON_SRC" "$ICON_DEST"
+        ICON_LINE="$ICON_DEST"
+    fi
+
+    write_files "$NAZWA" "$NEW_URL" "$ICON_LINE" "$FLAGS"
+}
+
+cmd_list() {
+    if [[ ! -d "$WRAPPER_BASE" ]] || [[ -z "$(find "$WRAPPER_BASE" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)" ]]; then
+        echo "Brak zainstalowanych appek."
+        exit 0
+    fi
+    echo "Zainstalowane webappki:"
+    for dir in "$WRAPPER_BASE"/*/; do
+        local nazwa_dir
+        nazwa_dir=$(basename "$dir")
+        local cfg="${dir}${nazwa_dir}.cfg"
+        [[ -f "$cfg" ]] || continue
+        source "$cfg"
+        echo "  - ${NAZWA}  (${URL})"
+        echo "      flagi: ${FLAGS}"
+    done
+}
+
+cmd_remove() {
+    local NAZWA="$1"
+    local APP_DIR="${WRAPPER_BASE}/${NAZWA}"
+
+    if [[ -d "$APP_DIR" ]]; then
+        need_pkexec
+        pkexec bash -c 'rm -rf "$1"' _ "$APP_DIR"
+    fi
+
+    rm -f "${DESKTOP_DIR}/${NAZWA}.desktop"
+    rm -f "${ICON_DIR}/${NAZWA}".*
+    update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+    echo "Usunięto: ${NAZWA}"
+}
+
+case "$1" in
+    install) cmd_install ;;
+    -list) cmd_list ;;
+    -edit) cmd_edit "$2" ;;
+    -remove) cmd_remove "$2" ;;
+    *)
+        echo "Użycie:"
+        echo "  webapp-gen install"
+        echo "  webapp-gen -list"
+        echo "  webapp-gen -edit <nazwa>"
+        echo "  webapp-gen -remove <nazwa>"
+        ;;
+esac
