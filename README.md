@@ -93,9 +93,9 @@ Język (polski/angielski)
 Domyślną ścieżkę do ikon - folder, w którym skrypt będzie szukał ikon jeśli podasz tylko nazwę pliku
 
 Możesz zmienić ustawienia w każdej chwili wybierając opcję 4 w menu lub edytując ręcznie plik:
-
+```
 ~/.config/webapp-gen/config.cfg
-
+```
 Przykładowy plik config:
 
 # webapp-gen config
@@ -132,13 +132,20 @@ Dostępne flagi do wyboru podczas instalacji:
 
 Flaga	Opis	Domyślnie
 ```
---disable-features=Translate,OptimizationGuide	    Wyłącza tłumacz Google i podpowiedzi	✅ Włączone
---disable-background-networking	                    Wyłącza zbędny ruch sieciowy w tle	✅ Włączone
---disable-extensions	                              Wyłącza wszystkie rozszerzenia	❌ Wyłączone
---disable-sync	                                    Wyłącza synchronizację z kontem Google	❌ Wyłączone
---disable-gpu	                                      Wyłącza akcelerację sprzętową GPU	❌ Wyłączone
---incognito	                                        Tryb incognito za każdym razem	❌ Wyłączone
---start-maximized	                                  Startuje okno zmaksymalizowane	❌ Wyłączone
+--disable-features=Translate,OptimizationGuide
+                    Wyłącza tłumacz Google i podpowiedzi	  ✅
+--disable-background-networking
+                    Wyłącza zbędny ruch sieciowy w tle	    ✅
+--disable-extensions
+                    Wyłącza wszystkie rozszerzenia	        ❌
+--disable-sync
+                    Wyłącza synchronizację z kontem Google	❌
+--disable-gpu
+                    Wyłącza akcelerację sprzętową GPU	      ❌
+--incognito
+                    Tryb incognito za każdym razem	        ❌
+--start-maximized
+                    Startuje okno zmaksymalizowane	        ❌
 ```
 
 
