@@ -1,10 +1,9 @@
 #!/bin/bash
 # webapp-gen — generator appek webowych (chromium --app) jako osobne procesy
 # Komendy:
-#   webapp-gen install          -> kreator z okienkami (zenity)
-#   webapp-gen -list            -> lista zainstalowanych
-#   webapp-gen -edit <nazwa>    -> edycja configu istniejącej appki
-#   webapp-gen -remove <nazwa>  -> usunięcie appki
+#   webapp-gen              -> interaktywne menu
+#   webapp-gen -list        -> lista zainstalowanych
+#   webapp-gen -remove <nazwa> -> usunięcie appki
 #
 # Uwaga: skrypt NIE wymaga uruchamiania przez sudo. Root jest potrzebny tylko
 # do zapisu w /usr/local/bin/webapp-list — w tym momencie skrypt sam odpala
@@ -19,13 +18,6 @@ USER_HOME="${USER_HOME:-$HOME}"
 DESKTOP_DIR="${USER_HOME}/.local/share/applications"
 ICON_DIR="${USER_HOME}/.local/share/icons/webapp-ico"
 
-need_zenity() {
-    if ! command -v zenity &>/dev/null; then
-        echo "Brak zenity. Zainstaluj: sudo pacman -S zenity"
-        exit 1
-    fi
-}
-
 need_pkexec() {
     if ! command -v pkexec &>/dev/null; then
         echo "Brak pkexec (polkit). Zainstaluj: sudo pacman -S polkit"
@@ -33,29 +25,7 @@ need_pkexec() {
     fi
 }
 
-# --- Domyślne dostępne flagi do checklisty ---
-# format: TRUE/FALSE | flaga | opis
-FLAG_CATALOG=(
-    "TRUE"  "--disable-features=Translate,OptimizationGuide" "Wyłącz tłumacz i podpowiedzi Google"
-    "TRUE"  "--disable-background-networking"                "Wyłącz zbędny ruch w tle"
-    "FALSE" "--disable-extensions"                            "Wyłącz rozszerzenia chromium"
-    "FALSE" "--disable-sync"                                  "Wyłącz synchronizację kont Google"
-    "FALSE" "--disable-gpu"                                   "Wyłącz akcelerację GPU"
-    "FALSE" "--incognito"                                     "Tryb incognito za każdym razem"
-    "FALSE" "--start-maximized"                                "Startuj zmaksymalizowane okno"
-)
-
-pick_flags() {
-    zenity --list --title="Flagi chromium" --text="Zaznacz flagi dla tej appki" \
-        --checklist --column="Wybierz" --column="Flaga" --column="Opis" \
-        --separator="§" --width=650 --height=400 \
-        "${FLAG_CATALOG[@]}"
-}
-
 # Zapisuje wrapper + cfg w /usr/local/bin/webapp-list/<nazwa>/ przez pkexec.
-# Zapis do tymczasowych plików jako zwykły user, potem pkexec tylko je
-# przenosi na miejsce — root nie widzi żadnego dynamicznego bash -c z Twoimi
-# danymi wklejonymi w linię komend.
 write_root_files() {
     local NAZWA="$1" WRAPPER_CONTENT="$2" CFG_CONTENT="$3"
     local APP_DIR="${WRAPPER_BASE}/${NAZWA}"
@@ -128,118 +98,221 @@ EOF
     echo "  Desktop:  ${DESKTOP_FILE}"
 }
 
+ask_flags() {
+    local flags=()
+
+    # Flaga 1
+    read -p "Wyłącz tłumacz i podpowiedzi Google (--disable-features=Translate,OptimizationGuide) [Y/n]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]] || [[ -z "$answer" ]]; then
+        flags+=("--disable-features=Translate,OptimizationGuide")
+    fi
+
+    # Flaga 2
+    read -p "Wyłącz zbędny ruch w tle (--disable-background-networking) [Y/n]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]] || [[ -z "$answer" ]]; then
+        flags+=("--disable-background-networking")
+    fi
+
+    # Flaga 3
+    read -p "Wyłącz rozszerzenia chromium (--disable-extensions) [y/N]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--disable-extensions")
+    fi
+
+    # Flaga 4
+    read -p "Wyłącz synchronizację kont Google (--disable-sync) [y/N]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--disable-sync")
+    fi
+
+    # Flaga 5
+    read -p "Wyłącz akcelerację GPU (--disable-gpu) [y/N]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--disable-gpu")
+    fi
+
+    # Flaga 6
+    read -p "Tryb incognito za każdym razem (--incognito) [y/N]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--incognito")
+    fi
+
+    # Flaga 7
+    read -p "Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--start-maximized")
+    fi
+
+    # Zwróć tylko flagi jako jeden string
+    echo "${flags[@]}"
+}
+
 cmd_install() {
-    need_zenity
+    echo ""
+    echo "=== Instalacja nowej appki webowej ==="
+    echo ""
 
-    local FORM
-    FORM=$(zenity --forms --title="Nowa appka webowa" \
-        --text="Podaj dane" --separator="|" \
-        --add-entry="Nazwa (bez spacji)" \
-        --add-entry="URL") || exit 1
+    read -p "Nazwa (bez spacji): " NAZWA
+    NAZWA=$(echo "$NAZWA" | tr -d ' ')
 
-    local NAZWA URL
-    NAZWA=$(echo "$FORM" | cut -d'|' -f1 | tr -d ' ')
-    URL=$(echo "$FORM" | cut -d'|' -f2)
-
-    if [[ -z "$NAZWA" || -z "$URL" ]]; then
-        zenity --error --text="Nazwa i URL są wymagane."
-        exit 1
+    if [[ -z "$NAZWA" ]]; then
+        echo "Błąd: Nazwa nie może być pusta!"
+        return 1
     fi
 
     if [[ -d "${WRAPPER_BASE}/${NAZWA}" ]]; then
-        zenity --error --text="Appka '${NAZWA}' już istnieje. Użyj -edit."
-        exit 1
+        echo "Błąd: Appka '${NAZWA}' już istnieje!"
+        return 1
     fi
 
-    local FLAGS_RAW FLAGS
-    FLAGS_RAW=$(pick_flags) || FLAGS_RAW=""
-    FLAGS=$(echo "$FLAGS_RAW" | tr '§' ' ')
+    read -p "URL: " URL
+    if [[ -z "$URL" ]]; then
+        echo "Błąd: URL nie może być pusty!"
+        return 1
+    fi
 
-    local ICON_SRC ICON_LINE=""
-    ICON_SRC=$(zenity --file-selection --title="Wybierz ikonę (.ico/.svg/.png) — Anuluj = brak ikony" 2>/dev/null || true)
+    # Flagi
+    FLAGS=$(ask_flags)
+    echo ""
+    echo "Wybrane flagi: $FLAGS"
+    echo ""
+
+    # Ikona
+    echo "Podaj ścieżkę do ikony (ENTER = brak):"
+    read -p "> " ICON_SRC
+
+    local ICON_LINE=""
     if [[ -n "$ICON_SRC" && -f "$ICON_SRC" ]]; then
         local EXT="${ICON_SRC##*.}"
         local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
         cp "$ICON_SRC" "$ICON_DEST"
         ICON_LINE="$ICON_DEST"
+        echo "Ikona skopiowana: $ICON_LINE"
+    elif [[ -n "$ICON_SRC" ]]; then
+        echo "Ostrzeżenie: Plik '$ICON_SRC' nie istnieje. Pomijam ikonę."
     fi
 
+    echo ""
     write_files "$NAZWA" "$URL" "$ICON_LINE" "$FLAGS"
-    zenity --info --text="Zainstalowano: ${NAZWA}"
-}
-
-cmd_edit() {
-    need_zenity
-    local NAZWA="$1"
-    local CFG="${WRAPPER_BASE}/${NAZWA}/${NAZWA}.cfg"
-    [[ -f "$CFG" ]] || { echo "Brak appki: ${NAZWA}"; exit 1; }
-    source "$CFG"
-
-    local FORM
-    FORM=$(zenity --forms --title="Edycja: ${NAZWA}" --separator="|" \
-        --add-entry="URL (obecny: ${URL})") || exit 1
-    local NEW_URL
-    NEW_URL=$(echo "$FORM" | cut -d'|' -f1)
-    [[ -z "$NEW_URL" ]] && NEW_URL="$URL"
-
-    local FLAGS_RAW FLAGS
-    FLAGS_RAW=$(pick_flags) || FLAGS_RAW="$FLAGS"
-    FLAGS=$(echo "$FLAGS_RAW" | tr '§' ' ')
-
-    local ICON_SRC ICON_LINE="$ICON"
-    ICON_SRC=$(zenity --file-selection --title="Nowa ikona — Anuluj = zostaw obecną" 2>/dev/null || true)
-    if [[ -n "$ICON_SRC" && -f "$ICON_SRC" ]]; then
-        local EXT="${ICON_SRC##*.}"
-        local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
-        cp "$ICON_SRC" "$ICON_DEST"
-        ICON_LINE="$ICON_DEST"
-    fi
-
-    write_files "$NAZWA" "$NEW_URL" "$ICON_LINE" "$FLAGS"
 }
 
 cmd_list() {
     if [[ ! -d "$WRAPPER_BASE" ]] || [[ -z "$(find "$WRAPPER_BASE" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)" ]]; then
         echo "Brak zainstalowanych appek."
-        exit 0
+        return 0
     fi
-    echo "Zainstalowane webappki:"
+
+    echo ""
+    echo "=== Zainstalowane webappki ==="
+    echo ""
+
+    local i=1
     for dir in "$WRAPPER_BASE"/*/; do
         local nazwa_dir
         nazwa_dir=$(basename "$dir")
         local cfg="${dir}${nazwa_dir}.cfg"
-        [[ -f "$cfg" ]] || continue
-        source "$cfg"
-        echo "  - ${NAZWA}  (${URL})"
-        echo "      flagi: ${FLAGS}"
+
+        if [[ -f "$cfg" ]]; then
+            source "$cfg"
+            echo "$i. ${NAZWA}"
+            echo "   URL:   ${URL}"
+            echo "   Flagi: ${FLAGS}"
+            echo ""
+            ((i++))
+        fi
     done
 }
 
 cmd_remove() {
-    local NAZWA="$1"
-    local APP_DIR="${WRAPPER_BASE}/${NAZWA}"
+    echo ""
+    echo "=== Usuwanie appki ==="
+    echo ""
 
-    if [[ -d "$APP_DIR" ]]; then
-        need_pkexec
-        pkexec bash -c 'rm -rf "$1"' _ "$APP_DIR"
+    # Pokaż listę
+    local apps=()
+    local i=1
+    for dir in "$WRAPPER_BASE"/*/; do
+        local nazwa_dir
+        nazwa_dir=$(basename "$dir")
+        local cfg="${dir}${nazwa_dir}.cfg"
+
+        if [[ -f "$cfg" ]]; then
+            source "$cfg"
+            apps+=("$NAZWA")
+            echo "$i. $NAZWA"
+            ((i++))
+        fi
+    done
+
+    if [[ ${#apps[@]} -eq 0 ]]; then
+        echo "Brak appek do usunięcia."
+        return 0
     fi
 
-    rm -f "${DESKTOP_DIR}/${NAZWA}.desktop"
-    rm -f "${ICON_DIR}/${NAZWA}".*
-    update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
-    echo "Usunięto: ${NAZWA}"
+    echo ""
+    read -p "Podaj numer appki do usunięcia: " num
+
+    if [[ "$num" =~ ^[0-9]+$ ]] && [[ "$num" -ge 1 ]] && [[ "$num" -le ${#apps[@]} ]]; then
+        local NAZWA="${apps[$((num-1))]}"
+        local APP_DIR="${WRAPPER_BASE}/${NAZWA}"
+
+        echo "Usuwanie: $NAZWA"
+
+        if [[ -d "$APP_DIR" ]]; then
+            need_pkexec
+            pkexec bash -c 'rm -rf "$1"' _ "$APP_DIR"
+        fi
+
+        rm -f "${DESKTOP_DIR}/${NAZWA}.desktop"
+        rm -f "${ICON_DIR}/${NAZWA}".*
+        update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+
+        echo "Usunięto: ${NAZWA}"
+    else
+        echo "Błędny numer!"
+        return 1
+    fi
+}
+
+main_menu() {
+    echo ""
+    echo "=== webapp-gen ==="
+    echo "1. Instaluj nową appkę"
+    echo "2. Lista zainstalowanych"
+    echo "3. Usuń appkę"
+    echo "4. Wyjście"
+    echo ""
+
+    read -p "Wybierz opcję [1-4]: " choice
+
+    case "$choice" in
+        1) cmd_install ;;
+        2) cmd_list ;;
+        3) cmd_remove ;;
+        4) echo "Do widzenia!"; exit 0 ;;
+        *) echo "Nieprawidłowa opcja!" ;;
+    esac
 }
 
 case "$1" in
-    install) cmd_install ;;
     -list) cmd_list ;;
-    -edit) cmd_edit "$2" ;;
-    -remove) cmd_remove "$2" ;;
-    *)
+    -remove) cmd_remove ;;
+    -h|--help|help)
         echo "Użycie:"
-        echo "  webapp-gen install"
-        echo "  webapp-gen -list"
-        echo "  webapp-gen -edit <nazwa>"
-        echo "  webapp-gen -remove <nazwa>"
+        echo "  webapp-gen              -> interaktywne menu"
+        echo "  webapp-gen -list        -> lista zainstalowanych"
+        echo "  webapp-gen -remove      -> interaktywne usuwanie"
+        ;;
+    "")
+        while true; do
+            main_menu
+            echo ""
+            read -p "Naciśnij Enter aby kontynuować..."
+        done
+        ;;
+    *)
+        echo "Nieznana opcja: $1"
+        echo "Użyj 'webapp-gen -h' dla pomocy."
+        exit 1
         ;;
 esac
