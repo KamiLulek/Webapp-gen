@@ -128,6 +128,15 @@ DEFAULT_ICON_PATH="/home/lula/Obrazy"
 
 Plik/Folder	Lokalizacja	Opis
 
+Plik/Folder	Lokalizacja	Opis
+Wrapper aplikacji	/usr/local/bin/webapp-list/<nazwa>/<nazwa>-app	Skrypt uruchamiający aplikację
+Konfiguracja aplikacji	/usr/local/bin/webapp-list/<nazwa>/<nazwa>.cfg	Przechowuje URL, flagi i ścieżkę do ikony
+Skrót w menu	~/.local/share/applications/<nazwa>.desktop	Plik .desktop dla menu systemowego
+Ikona	~/.local/share/icons/webapp-ico/<nazwa>.*	Skopiowana ikona aplikacji
+Dane aplikacji	~/.config/<nazwa>-app/	Katalog danych Chromium (profile, cookies)
+Konfiguracja skryptu	~/.config/webapp-gen/config.cfg	Ustawienia języka i domyślnej ścieżki
+
+
 Wrapper 	               /usr/local/bin/webapp-list/<nazwa>/<nazwa>-app          	Skrypt uruchamiający aplikację
 Konfiguracja             /usr/local/bin/webapp-list/<nazwa>/<nazwa>.cfg	          Przechowuje URL, flagi i ścieżkę do ikony
 Skrót w menu	           ~/.local/share/applications/<nazwa>.desktop	            Plik .desktop dla menu systemowego
