@@ -8,7 +8,7 @@ Generator aplikacji webowych dla Chromium - twórz osobne aplikacje z wybranych 
   - [Instalacja](#instalacja)
   - [Użycie](#użycie)
   - [Konfiguracja](#konfiguracja)
-  - [Gdzie zapisywane są pliki](#gdzie-zapisywane-są-pliki)
+  - [Gdzie zapisywane są pliki](#pliki)
   - [Flagi Chromium](#flagi-chromium)
   - 
 - [English](#english)
@@ -124,7 +124,7 @@ Przykładowy plik config:
 LANG_CHOICE="pl"
 DEFAULT_ICON_PATH="/home/lula/Obrazy"
 
-Gdzie zapisywane są pliki
+## Pliki
 
 Plik/Folder	Lokalizacja	Opis
 
