@@ -66,7 +66,7 @@ sudo apt install chromium-browser polkit-utils
 sudo dnf install chromium polkit
 
 
-# Użycie
+## Użycie
 
 webapp-gen
 
@@ -105,7 +105,8 @@ Wybierz opcję 3 - możesz zmienić URL, flagi i ikonę.
 Usuwanie aplikacji
 Wybierz opcję 5 - wybierz aplikację z listy do usunięcia.
 
-Konfiguracja
+## Konfiguracja
+
 Przy pierwszym uruchomieniu skrypt zapyta o:
 
 Język (polski/angielski)
@@ -122,6 +123,8 @@ Przykładowy plik config:
 # webapp-gen config
 LANG_CHOICE="pl"
 DEFAULT_ICON_PATH="/home/lula/Obrazy"
+
+## gdzie-zapisywane-są-pliki
 
 Plik/Folder	Lokalizacja	Opis
 
