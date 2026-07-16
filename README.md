@@ -41,15 +41,15 @@ Generator aplikacji webowych dla Chromium - twórz osobne aplikacje z wybranych 
 ## Instalacja
 
 # Pobierz skrypt:
-
-git clone https://github.com/twoj-repo/webapp-gen.git
+```
+git clone https://github.com/KamiLulek/webapp-gen
 cd webapp-gen
-
+```
 # Instalacja:
-
+```
 sudo cp webapp-gen /usr/local/bin/
 sudo chmod +x /usr/local/bin/webapp-gen
-
+```
 # Wymagania:
 
 - Chromium                   (lub przeglądarka oparta o Chromium)
@@ -57,17 +57,20 @@ sudo chmod +x /usr/local/bin/webapp-gen
 - update-desktop-database    (opcjonalnie, dla odświeżenia menu)
 
 # Arch Linux
+```
 sudo pacman -S chromium polkit
-
+```
 # Ubuntu/Debian
+```
 sudo apt install chromium-browser polkit-utils
-
+```
 # Fedora
+```
 sudo dnf install chromium polkit
-
+```
 
 ## Użycie
-
+```
 webapp-gen
 
 === webapp-gen ===
@@ -79,31 +82,7 @@ webapp-gen
 6. Wyjście
 
 Wybierz opcję [1-6]:
-
-Instalacja nowej aplikacji
-
-Wybierz opcję 1
-
-Podaj nazwę (bez spacji, np. gmail, youtube)
-
-Podaj URL (np. https://mail.google.com/)
-
-Wybierz flagi Chromium (wpisz Y lub N):
-
-Domyślnie włączone: wyłączenie tłumacza i ruchu w tle
-
-Pozostałe opcjonalne
-
-Podaj ścieżkę do ikony lub wpisz samą nazwę pliku (skrypt sprawdzi w domyślnym folderze)
-
-Lista zainstalowanych
-Wybierz opcję 2 - wyświetli wszystkie aplikacje z ich URL i flagami.
-
-Edycja aplikacji
-Wybierz opcję 3 - możesz zmienić URL, flagi i ikonę.
-
-Usuwanie aplikacji
-Wybierz opcję 5 - wybierz aplikację z listy do usunięcia.
+```
 
 ## Konfiguracja
 
@@ -115,15 +94,15 @@ Domyślną ścieżkę do ikon - folder, w którym skrypt będzie szukał ikon je
 
 Możesz zmienić ustawienia w każdej chwili wybierając opcję 4 w menu lub edytując ręcznie plik:
 
-
 ~/.config/webapp-gen/config.cfg
 
 Przykładowy plik config:
 
 # webapp-gen config
+```
 LANG_CHOICE="pl"
 DEFAULT_ICON_PATH="/home/lula/Obrazy"
-
+```
 ## Pliki
 
 Plik/Folder	Lokalizacja	Opis
@@ -152,14 +131,15 @@ Flagi Chromium
 Dostępne flagi do wyboru podczas instalacji:
 
 Flaga	Opis	Domyślnie
---disable-features=Translate,OptimizationGuide	Wyłącza tłumacz Google i podpowiedzi	✅ Włączone
---disable-background-networking	Wyłącza zbędny ruch sieciowy w tle	✅ Włączone
---disable-extensions	Wyłącza wszystkie rozszerzenia	❌ Wyłączone
---disable-sync	Wyłącza synchronizację z kontem Google	❌ Wyłączone
---disable-gpu	Wyłącza akcelerację sprzętową GPU	❌ Wyłączone
---incognito	Tryb incognito za każdym razem	❌ Wyłączone
---start-maximized	Startuje okno zmaksymalizowane	❌ Wyłączone
-
+```
+--disable-features=Translate,OptimizationGuide	    Wyłącza tłumacz Google i podpowiedzi	✅ Włączone
+--disable-background-networking	                    Wyłącza zbędny ruch sieciowy w tle	✅ Włączone
+--disable-extensions	                              Wyłącza wszystkie rozszerzenia	❌ Wyłączone
+--disable-sync	                                    Wyłącza synchronizację z kontem Google	❌ Wyłączone
+--disable-gpu	                                      Wyłącza akcelerację sprzętową GPU	❌ Wyłączone
+--incognito	                                        Tryb incognito za każdym razem	❌ Wyłączone
+--start-maximized	                                  Startuje okno zmaksymalizowane	❌ Wyłączone
+```
 
 
 English
