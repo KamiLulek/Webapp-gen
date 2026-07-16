@@ -124,7 +124,7 @@ Przykładowy plik config:
 LANG_CHOICE="pl"
 DEFAULT_ICON_PATH="/home/lula/Obrazy"
 
-## gdzie-zapisywane-są-pliki
+Gdzie zapisywane są pliki
 
 Plik/Folder	Lokalizacja	Opis
 
