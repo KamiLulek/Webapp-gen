@@ -128,22 +128,22 @@ DEFAULT_ICON_PATH="/home/lula/Obrazy"
 
 Plik/Folder	Lokalizacja	Opis
 ```
-Wrapper aplikacji	- Skrypt uruchamiający aplikację
+Wrapper aplikacji   =   Skrypt uruchamiający aplikację
 /usr/local/bin/webapp-list/<nazwa>/<nazwa>-app
 
 Konfiguracja aplikacji	- Przechowuje URL, flagi i ścieżkę do ikony
 /usr/local/bin/webapp-list/<nazwa>/<nazwa>.cfg
 
-Skrót w menu	- Plik .desktop dla menu systemowego
+Skrót w menu   =   Plik .desktop dla menu systemowego
 ~/.local/share/applications/<nazwa>.desktop
 
-Ikona	- Skopiowana ikona aplikacji
+Ikona   =   Skopiowana ikona aplikacji
 ~/.local/share/icons/webapp-ico/<nazwa>.*
 
-Dane aplikacji	- Katalog danych Chromium (profile, cookies)
+Dane aplikacji   =   Katalog danych Chromium (profile, cookies)
 ~/.config/<nazwa>-app/
 
-Konfiguracja skryptu	- Ustawienia języka i domyślnej ścieżki
+Konfiguracja skryptu   =   Ustawienia języka i domyślnej ścieżki
 ~/.config/webapp-gen/config.cfg
 ```
 UWAGA: Pliki w /usr/local/bin/webapp-list/ wymagają uprawnień roota, dlatego skrypt używa pkexec przy instalacji/edycji/usuwaniu.
