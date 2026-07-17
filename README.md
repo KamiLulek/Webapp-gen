@@ -1,7 +1,6 @@
 # webapp-gen
 
 Web app generator for Chromium - create apps from a selected website.
-Generator aplikacji webowych dla Chromium - twórz osobne aplikacje z wybranych stron www.
 
 - [Polski](#polski)
 - [English](#english)
