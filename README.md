@@ -5,8 +5,8 @@ Web app generator for Chromium - create apps from a selected website.
 - [Polski](#polski)
 - [English](#english)
 
----<p align="center">
-![alt text](https://github.com/KamiLulek/Webapp-gen/blob/main/webapp-gen-preview.png?raw=true)</p>
+---
+<p align="center">![alt text](https://github.com/KamiLulek/Webapp-gen/blob/main/webapp-gen-preview.png?raw=true)</p>
 ---
 
 # Polski
