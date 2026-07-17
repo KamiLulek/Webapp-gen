@@ -214,37 +214,39 @@ Select option 3 - you can change URL, flags, and icon.
 Remove app
 Select option 5 - choose app from list to remove.
 
-Configuration
+# Configuration
 On first run, the script will ask for:
 
 Language (Polish/English)
 
 Default icon path - folder where the script looks for icons if you provide only filename
-
 You can change settings anytime by selecting option 4 in menu or editing the file manually:
-
-
+```
 ~/.config/webapp-gen/config.cfg
-Example config file:
-
-bash
+```
 # webapp-gen config
+```
 LANG_CHOICE="en"
 DEFAULT_ICON_PATH="/home/lula/Pictures"
-
+```
 Where files are stored
 File/Folder	Location	Description
 ```
 Wrapper   =   Script that launches the app
 /usr/local/bin/webapp-list/<name>/<name>-app
+
 Config   =   Stores URL, flags, and icon path
 /usr/local/bin/webapp-list/<name>/<name>.cfg
+
 Menu shortcut   =   .desktop file for system menu
 ~/.local/share/applications/<name>.desktop
+
 Icon   =   Copied app icon
 ~/.local/share/icons/webapp-ico/<name>.*
+
 App data   =   Chromium data directory (profiles, cookies)
 ~/.config/<name>-app/
+
 Script config   =   Language and default icon path settings
 ~/.config/webapp-gen/config.cfg
 ```
