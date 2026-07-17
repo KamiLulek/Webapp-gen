@@ -227,7 +227,7 @@ Script config   =   Language and default icon path settings
 ```
 NOTE: Files in /usr/local/bin/webapp-list/ require root privileges, so the script uses pkexec during install/edit/remove.
 
-Chromium Flags
+## Chromium Flags
 
 Available flags during installation:
 
