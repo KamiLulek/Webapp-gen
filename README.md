@@ -127,7 +127,7 @@ Konfiguracja skryptu   =   Ustawienia języka i domyślnej ścieżki
 ```
 UWAGA: Pliki w /usr/local/bin/webapp-list/ wymagają uprawnień roota, dlatego skrypt używa pkexec przy instalacji/edycji/usuwaniu.
 
-Flagi Chromium
+## Flagi Chromium
 Dostępne flagi do wyboru podczas instalacji:
 
 Flaga	Opis	Domyślnie
