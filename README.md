@@ -4,14 +4,7 @@ Generator aplikacji webowych dla Chromium - twórz osobne aplikacje z wybranych 
 
 ## Spis treści / Table of Contents
 - [Polski](#polski)
-
 - [English](#english)
-  - [Description](#description)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Configuration](#configuration)
-  - [Where files are stored](#where-files-are-stored)
-  - [Chromium flags](#chromium-flags)
 
 ---
 
@@ -150,7 +143,13 @@ Flaga	Opis	Domyślnie
 
 
 # English
-
+  - [Description](#description)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Configuration](#configuration)
+  - [Where files are stored](#where-files-are-stored)
+  - [Chromium flags](#chromium-flags)
+  - 
 webapp-gen is a bash script that creates separate web applications from selected websites using Chromium in --app mode. Each app runs as a separate process, has its own data directory, and can be launched like a normal application from the system menu.
 
 Features
