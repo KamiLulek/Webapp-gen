@@ -234,13 +234,14 @@ DEFAULT_ICON_PATH="/home/lula/Pictures"
 
 Where files are stored
 File/Folder	Location	Description
+```
 Wrapper	 	               /usr/local/bin/webapp-list/<name>/<name>-app	          Script that launches the app
 Config	 	               /usr/local/bin/webapp-list/<name>/<name>.cfg          	Stores URL, flags, and icon path
 Menu shortcut 	         ~/.local/share/applications/<name>.desktop	            .desktop file for system menu
 Icon	 	                 ~/.local/share/icons/webapp-ico/<name>.*	              Copied app icon
 App data	 	             ~/.config/<name>-app/	                                Chromium data directory (profiles, cookies)
 Script config	 	         ~/.config/webapp-gen/config.cfg	                      Language and default icon path settings
-
+```
 NOTE: Files in /usr/local/bin/webapp-list/ require root privileges, so the script uses pkexec during install/edit/remove.
 
 Chromium Flags
@@ -248,14 +249,22 @@ Chromium Flags
 Available flags during installation:
 
 Flag	Description	Default
---disable-features=Translate,OptimizationGuide	Disables Google Translate and suggestions	✅ Enabled
---disable-background-networking	Disables unnecessary background networking	✅ Enabled
---disable-extensions	Disables all extensions	❌ Disabled
---disable-sync	Disables Google account sync	❌ Disabled
---disable-gpu	Disables GPU hardware acceleration	❌ Disabled
---incognito	Always start in incognito mode	❌ Disabled
---start-maximized	Start window maximized	❌ Disabled
-
+```
+--disable-features=Translate,OptimizationGuide
+                                   ✅ Disables Google Translate and suggestions
+--disable-background-networking
+                                   ✅ Disables unnecessary background networking
+--disable-extensions
+                                   ❌ Disables all extensions
+--disable-sync
+                                   ❌ Disables Google account sync
+--disable-gpu
+                                   ❌ Disables GPU hardware acceleration
+--incognito
+                                   ❌ Always start in incognito mode
+--start-maximized
+                                   ❌ Start window maximizedd
+```
 
 License
 MIT License - feel free to use and modify!
