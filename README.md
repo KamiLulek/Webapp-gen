@@ -160,14 +160,17 @@ pkexec (polkit) - for writing to /usr/local/bin/webapp-list/
 update-desktop-database (optional, for menu refresh)
 
 # Arch Linux
+```
 sudo pacman -S chromium polkit
-
+```
 # Ubuntu/Debian
+```
 sudo apt install chromium-browser polkit-utils
-
+```
 # Fedora
+```
 sudo dnf install chromium polkit
-
+```
 # Usage
 ```
 webapp-gen
