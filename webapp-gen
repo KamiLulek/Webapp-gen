@@ -30,7 +30,7 @@ load_lang() {
 first_time_config() {
     echo ""
     echo "╔════════════════════════════════════════╗"
-    echo "║          webapp-gen - FIRST RUN       ║"
+    echo "║          webapp-gen - FIRST RUN        ║"
     echo "╚════════════════════════════════════════╝"
     echo ""
     echo "Select language / Wybierz język:"
@@ -294,6 +294,7 @@ EOF
 
     echo ""
     printf "$(t install_done)\n" "$NAZWA"
+    echo ""
     echo "  Folder:   ${APP_DIR}"
     echo "  Wrapper:  ${WRAPPER}"
     echo "  Cfg:      ${CFG}"
@@ -301,45 +302,89 @@ EOF
 }
 
 ask_flags() {
-    printf "\n$(t install_flags_title)\n\n"
-
     local flags=()
 
-    read -p "Wyłącz tłumacz i podpowiedzi Google (--disable-features=Translate,OptimizationGuide) [Y/n]: " answer
+    # Wszystkie komunikaty wysyłamy na stderr
+    echo "" >&2
+
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        echo "Select chromium flags (type Y or N):" >&2
+    else
+        echo "Wybierz flagi dla chromium (wpisz Y lub N):" >&2
+    fi
+    echo "" >&2
+
+    # Flaga 1
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable Google Translate and suggestions (--disable-features=Translate,OptimizationGuide) [Y/n]: " answer
+    else
+        read -p "Wyłącz tłumacz i podpowiedzi Google (--disable-features=Translate,OptimizationGuide) [Y/n]: " answer
+    fi
     if [[ "$answer" =~ ^[Yy]$ ]] || [[ -z "$answer" ]]; then
         flags+=("--disable-features=Translate,OptimizationGuide")
     fi
 
-    read -p "Wyłącz zbędny ruch w tle (--disable-background-networking) [Y/n]: " answer
+    # Flaga 2
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable unnecessary background networking (--disable-background-networking) [Y/n]: " answer
+    else
+        read -p "Wyłącz zbędny ruch w tle (--disable-background-networking) [Y/n]: " answer
+    fi
     if [[ "$answer" =~ ^[Yy]$ ]] || [[ -z "$answer" ]]; then
         flags+=("--disable-background-networking")
     fi
 
-    read -p "Wyłącz rozszerzenia chromium (--disable-extensions) [y/N]: " answer
+    # Flaga 3
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable Chromium extensions (--disable-extensions) [y/N]: " answer
+    else
+        read -p "Wyłącz rozszerzenia chromium (--disable-extensions) [y/N]: " answer
+    fi
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         flags+=("--disable-extensions")
     fi
 
-    read -p "Wyłącz synchronizację kont Google (--disable-sync) [y/N]: " answer
+    # Flaga 4
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable Google account sync (--disable-sync) [y/N]: " answer
+    else
+        read -p "Wyłącz synchronizację kont Google (--disable-sync) [y/N]: " answer
+    fi
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         flags+=("--disable-sync")
     fi
 
-    read -p "Wyłącz akcelerację GPU (--disable-gpu) [y/N]: " answer
+    # Flaga 5
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable GPU hardware acceleration (--disable-gpu) [y/N]: " answer
+    else
+        read -p "Wyłącz akcelerację GPU (--disable-gpu) [y/N]: " answer
+    fi
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         flags+=("--disable-gpu")
     fi
 
-    read -p "Tryb incognito za każdym razem (--incognito) [y/N]: " answer
+    # Flaga 6
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Always start in incognito mode (--incognito) [y/N]: " answer
+    else
+        read -p "Tryb incognito za każdym razem (--incognito) [y/N]: " answer
+    fi
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         flags+=("--incognito")
     fi
 
-    read -p "Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " answer
+    # Flaga 7
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Start window maximized (--start-maximized) [y/N]: " answer
+    else
+        read -p "Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " answer
+    fi
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         flags+=("--start-maximized")
     fi
 
+    # Tylko to trafi do zmiennej (stdout)
     echo "${flags[@]}"
 }
 
@@ -399,15 +444,43 @@ cmd_install() {
     FLAGS=$(ask_flags)
     printf "\n$(t install_flags_choice)\n" "$FLAGS"
 
-    ICON_PATH=$(get_icon_path "$(t install_icon_prompt)")
-    local ICON_LINE=""
+    # Wybór ikony
+    echo ""
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        echo "Enter the name of the icon file from the selected folder."
+        echo ""
+        read -p "$DEFAULT_ICON_PATH: " ICON_INPUT
+        echo ""
+    else
+        echo "Podaj nazwe pliku ikony z wybranego folderu."
+        echo ""
+        read -p "$DEFAULT_ICON_PATH: " ICON_INPUT
+        echo ""
+    fi
 
-    if [[ -n "$ICON_PATH" ]]; then
-        local EXT="${ICON_PATH##*.}"
-        local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
-        cp "$ICON_PATH" "$ICON_DEST"
-        ICON_LINE="$ICON_DEST"
-        printf "$(t install_icon_copied)\n" "$ICON_LINE"
+    local ICON_LINE=""
+    if [[ -n "$ICON_INPUT" ]]; then
+        # Sprawdź czy to pełna ścieżka
+        if [[ -f "$ICON_INPUT" ]]; then
+            ICON_PATH="$ICON_INPUT"
+        elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then
+            ICON_PATH="${DEFAULT_ICON_PATH}/${ICON_INPUT}"
+        else
+            if [[ "$LANG_CHOICE" == "en" ]]; then
+                echo "Warning: File '$ICON_INPUT' not found"
+            else
+                echo "Ostrzeżenie: Nie znaleziono pliku '$ICON_INPUT'"
+            fi
+            ICON_PATH=""
+        fi
+
+        if [[ -n "$ICON_PATH" && -f "$ICON_PATH" ]]; then
+            local EXT="${ICON_PATH##*.}"
+            local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
+            cp "$ICON_PATH" "$ICON_DEST"
+            ICON_LINE="$ICON_DEST"
+            printf "$(t install_icon_copied)\n" "$ICON_LINE"
+        fi
     fi
 
     echo ""
@@ -486,15 +559,38 @@ cmd_edit() {
 
     FLAGS=$(ask_flags)
 
-    ICON_PATH=$(get_icon_path "$(t edit_new_icon)")
-    local ICON_LINE="$ICON"
+    # Wybór nowej ikony
+    echo ""
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        echo "New icon file (ENTER = keep current, or enter filename from default folder: $DEFAULT_ICON_PATH):"
+    else
+        echo "Nowy plik ikony (ENTER = zostaw obecną, lub podaj nazwę pliku z domyślnego folderu: $DEFAULT_ICON_PATH):"
+    fi
+    read -p "> " ICON_INPUT
 
-    if [[ -n "$ICON_PATH" ]]; then
-        local EXT="${ICON_PATH##*.}"
-        local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
-        cp "$ICON_PATH" "$ICON_DEST"
-        ICON_LINE="$ICON_DEST"
-        printf "$(t edit_icon_updated)\n" "$ICON_LINE"
+    local ICON_LINE="$ICON"
+    if [[ -n "$ICON_INPUT" ]]; then
+        # Sprawdź czy to pełna ścieżka
+        if [[ -f "$ICON_INPUT" ]]; then
+            ICON_PATH="$ICON_INPUT"
+        elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then
+            ICON_PATH="${DEFAULT_ICON_PATH}/${ICON_INPUT}"
+        else
+            if [[ "$LANG_CHOICE" == "en" ]]; then
+                echo "Warning: File '$ICON_INPUT' not found. Keeping current icon."
+            else
+                echo "Ostrzeżenie: Nie znaleziono pliku '$ICON_INPUT'. Zostawiam obecną ikonę."
+            fi
+            ICON_PATH=""
+        fi
+
+        if [[ -n "$ICON_PATH" && -f "$ICON_PATH" ]]; then
+            local EXT="${ICON_PATH##*.}"
+            local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
+            cp "$ICON_PATH" "$ICON_DEST"
+            ICON_LINE="$ICON_DEST"
+            printf "$(t edit_icon_updated)\n" "$ICON_LINE"
+        fi
     fi
 
     echo ""
