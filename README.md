@@ -138,7 +138,7 @@ Flaga	Opis	Domyślnie
   - [Installation](#installation)
   - [Usage](#usage)
   - [Configuration](#configuration)
-  - [Where files are stored](#where-files-are-stored)
+  - [Where files are stored](#Files)
   - [Chromium flags](#chromium-flags)
     
 webapp-gen is a bash script that creates separate web applications from selected websites using Chromium in --app mode. Each app runs as a separate process, has its own data directory, and can be launched like a normal application from the system menu.
