@@ -143,26 +143,21 @@ Flaga	Opis	Domyślnie
     
 webapp-gen is a bash script that creates separate web applications from selected websites using Chromium in --app mode. Each app runs as a separate process, has its own data directory, and can be launched like a normal application from the system menu.
 
-Installation
 Download the script:
-
-
+```
 git clone https://github.com/KamiLulek/webapp-gen.git
 cd webapp-gen
-Install:
-
-
+```
+# Installation
+```
 sudo cp webapp-gen /usr/local/bin/
 sudo chmod +x /usr/local/bin/webapp-gen
-
+```
 Requirements:
 
 Chromium (or Chromium-based browser)
-
 pkexec (polkit) - for writing to /usr/local/bin/webapp-list/
-
 update-desktop-database (optional, for menu refresh)
-
 
 # Arch Linux
 sudo pacman -S chromium polkit
@@ -172,15 +167,11 @@ sudo apt install chromium-browser polkit-utils
 
 # Fedora
 sudo dnf install chromium polkit
-Usage
-After installation, run:
 
-
+# Usage
+```
 webapp-gen
 
-Main menu appears:
-
-text
 === webapp-gen ===
 1. Install new app
 2. List installed
@@ -190,29 +181,7 @@ text
 6. Exit
 
 Choose option [1-6]:
-Install new app
-Select option 1
-
-Enter name (no spaces, e.g., gmail, youtube)
-
-Enter URL (e.g., https://mail.google.com/)
-
-Select Chromium flags (type Y or N):
-
-Default enabled: disable translator and background networking
-
-Others optional
-
-Enter path to icon or just filename (script will check in default folder)
-
-List installed apps
-Select option 2 - displays all apps with their URLs and flags.
-
-Edit app
-Select option 3 - you can change URL, flags, and icon.
-
-Remove app
-Select option 5 - choose app from list to remove.
+```
 
 # Configuration
 On first run, the script will ask for:
