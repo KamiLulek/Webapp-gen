@@ -235,12 +235,18 @@ DEFAULT_ICON_PATH="/home/lula/Pictures"
 Where files are stored
 File/Folder	Location	Description
 ```
-Wrapper	 	               /usr/local/bin/webapp-list/<name>/<name>-app	          Script that launches the app
-Config	 	               /usr/local/bin/webapp-list/<name>/<name>.cfg          	Stores URL, flags, and icon path
-Menu shortcut 	         ~/.local/share/applications/<name>.desktop	            .desktop file for system menu
-Icon	 	                 ~/.local/share/icons/webapp-ico/<name>.*	              Copied app icon
-App data	 	             ~/.config/<name>-app/	                                Chromium data directory (profiles, cookies)
-Script config	 	         ~/.config/webapp-gen/config.cfg	                      Language and default icon path settings
+Wrapper   =   Script that launches the app
+/usr/local/bin/webapp-list/<name>/<name>-app
+Config   =   Stores URL, flags, and icon path
+/usr/local/bin/webapp-list/<name>/<name>.cfg
+Menu shortcut   =   .desktop file for system menu
+~/.local/share/applications/<name>.desktop
+Icon   =   Copied app icon
+~/.local/share/icons/webapp-ico/<name>.*
+App data   =   Chromium data directory (profiles, cookies)
+~/.config/<name>-app/
+Script config   =   Language and default icon path settings
+~/.config/webapp-gen/config.cfg
 ```
 NOTE: Files in /usr/local/bin/webapp-list/ require root privileges, so the script uses pkexec during install/edit/remove.
 
