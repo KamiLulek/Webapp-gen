@@ -196,12 +196,15 @@ You can change settings anytime by selecting option 4 in menu or editing the fil
 ```
 ~/.config/webapp-gen/config.cfg
 ```
+Example config file:
+
 # webapp-gen config
 ```
 LANG_CHOICE="en"
 DEFAULT_ICON_PATH="/home/lula/Pictures"
 ```
-Where files are stored
+## Files
+
 File/Folder	Location	Description
 ```
 Wrapper   =   Script that launches the app
