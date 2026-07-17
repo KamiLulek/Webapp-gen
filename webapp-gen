@@ -3,22 +3,21 @@
 
 set -e
 
-WRAPPER_BASE="/usr/local/bin/webapp-list"
+WRAPPER_DIR="/usr/local/bin/webapp-list"
 USER_HOME="${SUDO_USER:+/home/$SUDO_USER}"
 USER_HOME="${USER_HOME:-$HOME}"
 DESKTOP_DIR="${USER_HOME}/.local/share/applications"
 ICON_DIR="${USER_HOME}/.local/share/icons/webapp-ico"
 CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
 CONFIG_FILE="${CONFIG_DIR}/config.cfg"
-
+APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
 
 # --- Funkcje językowe ---
 load_lang() {
-    # Domyślne wartości
     LANG_CHOICE="pl"
     DEFAULT_ICON_PATH="${USER_HOME}/Obrazy"
 
-    mkdir -p "$CONFIG_DIR"
+    mkdir -p "$CONFIG_DIR" "$APPS_CONFIG_DIR"
 
     if [[ -f "$CONFIG_FILE" ]]; then
         source "$CONFIG_FILE"
@@ -57,13 +56,13 @@ first_time_config() {
         echo "Enter default path for icons:"
         echo "  (this is where the script will look for icon files)"
         echo "  (ENTER for default: ${USER_HOME})"
+        read -p "Set path: " icon_path_input
     else
         echo "Podaj domyślną ścieżkę dla ikon:"
         echo "  (tu skrypt będzie szukał plików ikon)"
         echo "  (ENTER dla domyślnej: ${USER_HOME})"
+        read -p "Ustaw ścieżkę: " icon_path_input
     fi
-    echo ""
-    read -p "> " icon_path_input
 
     if [[ -n "$icon_path_input" ]]; then
         DEFAULT_ICON_PATH="$icon_path_input"
@@ -86,15 +85,6 @@ EOF
     fi
     echo ""
     read -p "Press Enter to continue..."
-}
-
-create_default_config() {
-    # Ta funkcja już niepotrzebna, ale zostawiam dla bezpieczeństwa
-    cat > "$CONFIG_FILE" << EOF
-# webapp-gen config
-LANG_CHOICE="$LANG_CHOICE"
-DEFAULT_ICON_PATH="$DEFAULT_ICON_PATH"
-EOF
 }
 
 # Funkcje tekstowe w zależności od języka
@@ -226,38 +216,17 @@ need_pkexec() {
     fi
 }
 
-# Zapisuje wrapper + cfg w /usr/local/bin/webapp-list/<nazwa>/ przez pkexec.
-write_root_files() {
-    local NAZWA="$1" WRAPPER_CONTENT="$2" CFG_CONTENT="$3"
-    local APP_DIR="${WRAPPER_BASE}/${NAZWA}"
-
-    local TMP_WRAPPER TMP_CFG
-    TMP_WRAPPER=$(mktemp)
-    TMP_CFG=$(mktemp)
-    printf '%s' "$WRAPPER_CONTENT" > "$TMP_WRAPPER"
-    printf '%s' "$CFG_CONTENT" > "$TMP_CFG"
-
-    need_pkexec
-    pkexec bash -c '
-        set -e
-        mkdir -p "$1"
-        install -m 755 "$2" "$1/$3-app"
-        install -m 644 "$4" "$1/$3.cfg"
-    ' _ "$APP_DIR" "$TMP_WRAPPER" "$NAZWA" "$TMP_CFG"
-
-    rm -f "$TMP_WRAPPER" "$TMP_CFG"
-}
-
-write_files() {
+# Zapisuje wrapper w /usr/local/bin/webapp-list/ i config w ~/.config/webapp-gen/apps/
+write_app_files() {
     local NAZWA="$1" URL="$2" ICON_LINE="$3" FLAGS="$4"
-    local APP_DIR="${WRAPPER_BASE}/${NAZWA}"
-    local WRAPPER="${APP_DIR}/${NAZWA}-app"
-    local CFG="${APP_DIR}/${NAZWA}.cfg"
+    local WRAPPER_PATH="${WRAPPER_DIR}/${NAZWA}-app"
+    local CFG_PATH="${APPS_CONFIG_DIR}/${NAZWA}.cfg"
     local DESKTOP_FILE="${DESKTOP_DIR}/${NAZWA}.desktop"
 
-    mkdir -p "$DESKTOP_DIR" "$ICON_DIR"
+    mkdir -p "$DESKTOP_DIR" "$ICON_DIR" "$WRAPPER_DIR"
 
-    local CFG_CONTENT WRAPPER_CONTENT
+    # Zawartość configu
+    local CFG_CONTENT
     CFG_CONTENT=$(cat << EOF
 NAZWA="${NAZWA}"
 URL="${URL}"
@@ -265,24 +234,42 @@ ICON="${ICON_LINE}"
 FLAGS="${FLAGS}"
 EOF
 )
+
+    # Zawartość wrappera
+    local WRAPPER_CONTENT
     WRAPPER_CONTENT=$(cat << EOF
 #!/bin/bash
-source "${CFG}"
-chromium --class=\${NAZWA} \${FLAGS} \\
-         --user-data-dir=${USER_HOME}/.config/\${NAZWA}-app \\
-         --app=\${URL}
+source "${CFG_PATH}"
+chromium --class="\${NAZWA}" \${FLAGS} \\
+         --user-data-dir="${USER_HOME}/.config/\${NAZWA}-app" \\
+         --app="\${URL}"
 EOF
 )
 
-    write_root_files "$NAZWA" "$WRAPPER_CONTENT" "$CFG_CONTENT"
+    # Zapisz config (user)
+    echo "$CFG_CONTENT" > "$CFG_PATH"
 
+    # Zapisz wrapper (root)
+    need_pkexec
+    local TMP_WRAPPER
+    TMP_WRAPPER=$(mktemp)
+    echo "$WRAPPER_CONTENT" > "$TMP_WRAPPER"
+
+    pkexec bash -c '
+        set -e
+        install -m 755 "$1" "$2"
+    ' _ "$TMP_WRAPPER" "$WRAPPER_PATH"
+
+    rm -f "$TMP_WRAPPER"
+
+    # Zapisz .desktop
     tee "$DESKTOP_FILE" > /dev/null << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=${NAZWA}
 Comment=${NAZWA} webapp
-Exec=${WRAPPER}
+Exec=${WRAPPER_PATH}
 Icon=${ICON_LINE:-applications-internet}
 Categories=Network;GTK;
 Terminal=false
@@ -295,16 +282,14 @@ EOF
     echo ""
     printf "$(t install_done)\n" "$NAZWA"
     echo ""
-    echo "  Folder:   ${APP_DIR}"
-    echo "  Wrapper:  ${WRAPPER}"
-    echo "  Cfg:      ${CFG}"
+    echo "  Wrapper:  ${WRAPPER_PATH}"
+    echo "  Config:   ${CFG_PATH}"
     echo "  Desktop:  ${DESKTOP_FILE}"
 }
 
 ask_flags() {
     local flags=()
 
-    # Wszystkie komunikaty wysyłamy na stderr
     echo "" >&2
 
     if [[ "$LANG_CHOICE" == "en" ]]; then
@@ -384,7 +369,6 @@ ask_flags() {
         flags+=("--start-maximized")
     fi
 
-    # Tylko to trafi do zmiennej (stdout)
     echo "${flags[@]}"
 }
 
@@ -402,19 +386,16 @@ get_icon_path() {
         return 1
     fi
 
-    # Sprawdź czy to pełna ścieżka
     if [[ -f "$ICON_INPUT" ]]; then
         echo "$ICON_INPUT"
         return 0
     fi
 
-    # Sprawdź w domyślnym folderze
     if [[ -f "${default_path}/${ICON_INPUT}" ]]; then
         echo "${default_path}/${ICON_INPUT}"
         return 0
     fi
 
-    # Nie znaleziono
     echo ""
     return 1
 }
@@ -430,7 +411,7 @@ cmd_install() {
         return 1
     fi
 
-    if [[ -d "${WRAPPER_BASE}/${NAZWA}" ]]; then
+    if [[ -f "${APPS_CONFIG_DIR}/${NAZWA}.cfg" ]] || [[ -f "${WRAPPER_DIR}/${NAZWA}-app" ]]; then
         printf "$(t install_exists)\n" "$NAZWA"
         return 1
     fi
@@ -460,7 +441,6 @@ cmd_install() {
 
     local ICON_LINE=""
     if [[ -n "$ICON_INPUT" ]]; then
-        # Sprawdź czy to pełna ścieżka
         if [[ -f "$ICON_INPUT" ]]; then
             ICON_PATH="$ICON_INPUT"
         elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then
@@ -484,11 +464,11 @@ cmd_install() {
     fi
 
     echo ""
-    write_files "$NAZWA" "$URL" "$ICON_LINE" "$FLAGS"
+    write_app_files "$NAZWA" "$URL" "$ICON_LINE" "$FLAGS"
 }
 
 cmd_list() {
-    if [[ ! -d "$WRAPPER_BASE" ]] || [[ -z "$(find "$WRAPPER_BASE" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)" ]]; then
+    if [[ ! -d "$APPS_CONFIG_DIR" ]] || [[ -z "$(find "$APPS_CONFIG_DIR" -name "*.cfg" 2>/dev/null)" ]]; then
         echo "$(t list_empty)"
         return 0
     fi
@@ -496,16 +476,13 @@ cmd_list() {
     printf "\n$(t list_title)\n\n"
 
     local i=1
-    for dir in "$WRAPPER_BASE"/*/; do
-        local nazwa_dir
-        nazwa_dir=$(basename "$dir")
-        local cfg="${dir}${nazwa_dir}.cfg"
-
+    for cfg in "$APPS_CONFIG_DIR"/*.cfg; do
         if [[ -f "$cfg" ]]; then
             source "$cfg"
             echo "$i. ${NAZWA}"
             echo "   URL:   ${URL}"
             echo "   Flagi: ${FLAGS}"
+            echo "   Wrapper: ${WRAPPER_DIR}/${NAZWA}-app"
             echo ""
             ((i++))
         fi
@@ -517,11 +494,7 @@ cmd_edit() {
 
     local apps=()
     local i=1
-    for dir in "$WRAPPER_BASE"/*/; do
-        local nazwa_dir
-        nazwa_dir=$(basename "$dir")
-        local cfg="${dir}${nazwa_dir}.cfg"
-
+    for cfg in "$APPS_CONFIG_DIR"/*.cfg; do
         if [[ -f "$cfg" ]]; then
             source "$cfg"
             apps+=("$NAZWA")
@@ -544,7 +517,7 @@ cmd_edit() {
     fi
 
     local NAZWA="${apps[$((num-1))]}"
-    local CFG="${WRAPPER_BASE}/${NAZWA}/${NAZWA}.cfg"
+    local CFG="${APPS_CONFIG_DIR}/${NAZWA}.cfg"
     source "$CFG"
 
     printf "\n$(t edit_info)\n" "$NAZWA"
@@ -570,7 +543,6 @@ cmd_edit() {
 
     local ICON_LINE="$ICON"
     if [[ -n "$ICON_INPUT" ]]; then
-        # Sprawdź czy to pełna ścieżka
         if [[ -f "$ICON_INPUT" ]]; then
             ICON_PATH="$ICON_INPUT"
         elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then
@@ -594,7 +566,7 @@ cmd_edit() {
     fi
 
     echo ""
-    write_files "$NAZWA" "$NEW_URL" "$ICON_LINE" "$FLAGS"
+    write_app_files "$NAZWA" "$NEW_URL" "$ICON_LINE" "$FLAGS"
 }
 
 cmd_remove() {
@@ -602,11 +574,7 @@ cmd_remove() {
 
     local apps=()
     local i=1
-    for dir in "$WRAPPER_BASE"/*/; do
-        local nazwa_dir
-        nazwa_dir=$(basename "$dir")
-        local cfg="${dir}${nazwa_dir}.cfg"
-
+    for cfg in "$APPS_CONFIG_DIR"/*.cfg; do
         if [[ -f "$cfg" ]]; then
             source "$cfg"
             apps+=("$NAZWA")
@@ -629,15 +597,21 @@ cmd_remove() {
     fi
 
     local NAZWA="${apps[$((num-1))]}"
-    local APP_DIR="${WRAPPER_BASE}/${NAZWA}"
+    local WRAPPER_PATH="${WRAPPER_DIR}/${NAZWA}-app"
+    local CFG_PATH="${APPS_CONFIG_DIR}/${NAZWA}.cfg"
 
     printf "$(t remove_confirm)\n" "$NAZWA"
 
-    if [[ -d "$APP_DIR" ]]; then
+    # Usuń wrapper (root)
+    if [[ -f "$WRAPPER_PATH" ]]; then
         need_pkexec
-        pkexec bash -c 'rm -rf "$1"' _ "$APP_DIR"
+        pkexec rm -f "$WRAPPER_PATH"
     fi
 
+    # Usuń config (user)
+    rm -f "$CFG_PATH"
+
+    # Usuń .desktop i ikonę (user)
     rm -f "${DESKTOP_DIR}/${NAZWA}.desktop"
     rm -f "${ICON_DIR}/${NAZWA}".*
     update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
