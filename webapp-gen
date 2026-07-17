@@ -1,5 +1,5 @@
 #!/bin/bash
-# webapp-gen — generator appek webowych (chromium --app) jako osobne procesy
+# webapp-gen — generator appek webowych (chromium --app)
 
 set -e
 
@@ -11,7 +11,7 @@ ICON_DIR="${USER_HOME}/.local/share/icons/webapp-ico"
 CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
 CONFIG_FILE="${CONFIG_DIR}/config.cfg"
 
-# --- Funkcje językowe ---
+
 # --- Funkcje językowe ---
 load_lang() {
     # Domyślne wartości
