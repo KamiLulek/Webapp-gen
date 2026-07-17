@@ -22,17 +22,6 @@ Web app generator for Chromium - create apps from a selected website.
 
 **webapp-gen** to skrypt bashowy, który tworzy osobne aplikacje webowe z wybranych stron przy użyciu Chromium w trybie `--app`. Każda aplikacja działa jako osobny proces, ma własny katalog danych i może być uruchamiana jak normalna aplikacja z menu systemowego.
 
-### Cechy
-- ✅ Tworzenie aplikacji webowych z dowolnej strony
-- ✅ Wybór flag Chromium podczas instalacji
-- ✅ Własny katalog danych dla każdej aplikacji
-- ✅ Skróty w menu systemowym (pliki .desktop)
-- ✅ Obsługa własnych ikon
-- ✅ Edycja istniejących aplikacji
-- ✅ Usuwanie aplikacji
-- ✅ Wsparcie dla języków polski/angielski
-- ✅ Działanie w konsoli (bez zenity)
-
 ## Instalacja
 
 # Pobierz skrypt:
