@@ -149,7 +149,7 @@ Flaga	Opis	Domyślnie
 ```
 
 
-English
+# English
 
 webapp-gen is a bash script that creates separate web applications from selected websites using Chromium in --app mode. Each app runs as a separate process, has its own data directory, and can be launched like a normal application from the system menu.
 
@@ -176,7 +176,7 @@ Installation
 Download the script:
 
 
-git clone https://github.com/your-repo/webapp-gen.git
+git clone https://github.com/KamiLulek/webapp-gen.git
 cd webapp-gen
 Install:
 
