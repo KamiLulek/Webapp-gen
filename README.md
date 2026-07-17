@@ -92,10 +92,10 @@ DEFAULT_ICON_PATH="/home/lula/Obrazy"
 Plik/Folder	Lokalizacja	Opis
 ```
 Wrapper aplikacji   =   Skrypt uruchamiający aplikację
-/usr/local/bin/webapp-list/<nazwa>/<nazwa>-app
+/usr/local/bin/webapp-list/<nazwa>-app
 
 Konfiguracja aplikacji	- Przechowuje URL, flagi i ścieżkę do ikony
-/usr/local/bin/webapp-list/<nazwa>/<nazwa>.cfg
+~/.config/webapp-gen/apps/<nazwa>.cfg
 
 Skrót w menu   =   Plik .desktop dla menu systemowego
 ~/.local/share/applications/<nazwa>.desktop
@@ -208,10 +208,10 @@ DEFAULT_ICON_PATH="/home/lula/Pictures"
 File/Folder	Location	Description
 ```
 Wrapper   =   Script that launches the app
-/usr/local/bin/webapp-list/<name>/<name>-app
+/usr/local/bin/webapp-list/<name>-app
 
 Config   =   Stores URL, flags, and icon path
-/usr/local/bin/webapp-list/<name>/<name>.cfg
+~/.config/webapp-gen/apps/<name>.cfg
 
 Menu shortcut   =   .desktop file for system menu
 ~/.local/share/applications/<name>.desktop
