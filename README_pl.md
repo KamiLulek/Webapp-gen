@@ -35,12 +35,6 @@ source ~/.bashrc
 - Chromium lub przeglądarka oparta o Chromium
 - `update-desktop-database` (opcjonalnie)
 
-### Migracja ze starej wersji
-
-```bash
-sudo rm -rf /usr/local/bin/webapp-list /usr/local/bin/*-app
-```
-
 ## Użycie
 
 ```bash
