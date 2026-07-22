@@ -28,7 +28,7 @@ PL:
 - Aplikacja uruchamia się poprawnie z własnym profilem i ustawieniami
 - Problem: okno pojawia się jako osobny proces Chromium, a nie jako dedykowana aplikacja
 - W menedżerze zadań widzisz po prostu chromium zamiast nazwa-aplikacji-app
-- Ikona na pasku zadań grupuje się z głównym Chromium (jeśli jest uruchomiony) lub pojawia się jako osobne okno Chromium
+- Ikona na pasku zadań grupuje się z głównym Chromium lub pojawia się jako osobne okno Chromium
 - Launcher (skrót) nie jest bezpośrednio powiązany z uruchomionym oknem - są to dwa oddzielne byty
 ```
 EN:
