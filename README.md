@@ -132,7 +132,7 @@ Flaga	Opis	Domyślnie
                                    ❌ Startuje okno zmaksymalizowane
 ```
 
-# Wlasne flagi
+## Wlasne flagi
 
 mozna dodac wlasne flagi dodatkowo do cfg:
 ```
