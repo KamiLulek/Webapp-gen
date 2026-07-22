@@ -49,14 +49,6 @@ source ~/.bashrc
 - Chromium or Chromium-based browser (`chromium`, `chromium-browser`, `google-chrome`, `brave`)
 - `update-desktop-database` (optional, for menu refresh)
 
-### Migrating from old version (with /usr/local/bin)
-
-If you had version with root:
-
-```bash
-sudo rm -rf /usr/local/bin/webapp-list /usr/local/bin/*-app
-```
-
 ## Usage
 
 ```bash
