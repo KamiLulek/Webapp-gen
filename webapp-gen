@@ -90,9 +90,10 @@ EOF
 t() {
     local key="$1"
     shift
+    VERSION="0.3"
     if [[ "$LANG_CHOICE" == "en" ]]; then
         case "$key" in
-            "menu_title") echo "=== webapp-gen ===" ;;
+            "menu_title") echo "=== webapp-gen v$VERSION ===" ;;
             "menu_install") echo "1. Install new app" ;;
             "menu_list") echo "2. List installed" ;;
             "menu_edit") echo "3. Edit app" ;;
@@ -150,7 +151,7 @@ t() {
     else
         # Polski domyślnie
         case "$key" in
-            "menu_title") echo "=== webapp-gen ===" ;;
+            "menu_title") echo "=== webapp-gen v$VERSION ===" ;;
             "menu_install") echo "1. Instaluj nową appkę" ;;
             "menu_list") echo "2. Lista zainstalowanych" ;;
             "menu_edit") echo "3. Edytuj appkę" ;;
@@ -217,20 +218,21 @@ need_pkexec() {
 
 # Zapisuje wrapper w /usr/local/bin/webapp-list/ i config w ~/.config/webapp-gen/apps/
 write_app_files() {
-    local NAZWA="$1" URL="$2" ICON_LINE="$3" FLAGS="$4"
-    local WRAPPER_PATH="${WRAPPER_DIR}/${NAZWA}-app"
-    local CFG_PATH="${APPS_CONFIG_DIR}/${NAZWA}.cfg"
-    local DESKTOP_FILE="${DESKTOP_DIR}/${NAZWA}.desktop"
+    local NAME="$1" URL="$2" ICON_LINE="$3" FLAGS="$4" CUSTOM_FLAGS="$5"
+    local WRAPPER_PATH="${WRAPPER_DIR}/${NAME}-app"
+    local CFG_PATH="${APPS_CONFIG_DIR}/${NAME}.cfg"
+    local DESKTOP_FILE="${DESKTOP_DIR}/${NAME}.desktop"
 
-    mkdir -p "$DESKTOP_DIR" "$ICON_DIR" "$WRAPPER_DIR"
+    mkdir -p "$DESKTOP_DIR" "$ICON_DIR" "$WRAPPER_DIR" "$APPS_CONFIG_DIR"
 
     # Zawartość configu
     local CFG_CONTENT
     CFG_CONTENT=$(cat << EOF
-NAZWA="${NAZWA}"
+NAME="${NAME}"
 URL="${URL}"
 ICON="${ICON_LINE}"
 FLAGS="${FLAGS}"
+CUSTOM_FLAGS="${CUSTOM_FLAGS}"
 EOF
 )
 
@@ -239,47 +241,40 @@ EOF
     WRAPPER_CONTENT=$(cat << EOF
 #!/bin/bash
 source "${CFG_PATH}"
-chromium --class="\${NAZWA}" \${FLAGS} \\
-         --user-data-dir="${USER_HOME}/.config/\${NAZWA}-app" \\
+# fallback dla starych cfg z NAZWA
+NAME="\${NAME:-\$NAZWA}"
+chromium --class="\${NAME}" \${FLAGS} \${CUSTOM_FLAGS} \\
+         --user-data-dir="${USER_HOME}/.config/\${NAME}-app" \\
          --app="\${URL}"
 EOF
 )
 
-    # Zapisz config (user)
+    # Zapisz config
     echo "$CFG_CONTENT" > "$CFG_PATH"
 
-    # Zapisz wrapper (root)
-    need_pkexec
-    local TMP_WRAPPER
-    TMP_WRAPPER=$(mktemp)
-    echo "$WRAPPER_CONTENT" > "$TMP_WRAPPER"
-
-    pkexec bash -c '
-        set -e
-        install -m 755 "$1" "$2"
-    ' _ "$TMP_WRAPPER" "$WRAPPER_PATH"
-
-    rm -f "$TMP_WRAPPER"
+    # Zapisz wrapper - BEZ pkexec, bo ~/.local
+    echo "$WRAPPER_CONTENT" > "$WRAPPER_PATH"
+    chmod +x "$WRAPPER_PATH"
 
     # Zapisz .desktop
     tee "$DESKTOP_FILE" > /dev/null << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=${NAZWA}
-Comment=${NAZWA} webapp
+Name=${NAME}
+Comment=${NAME} webapp
 Exec=${WRAPPER_PATH}
 Icon=${ICON_LINE:-applications-internet}
 Categories=Network;GTK;
 Terminal=false
 StartupNotify=true
-StartupWMClass=${NAZWA}
+StartupWMClass=${NAME}
 EOF
     chmod +x "$DESKTOP_FILE"
     update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 
     echo ""
-    printf "$(t install_done)\n" "$NAZWA"
+    printf "$(t install_done)\n" "$NAME"
     echo ""
     echo "  Wrapper:  ${WRAPPER_PATH}"
     echo "  Config:   ${CFG_PATH}"
@@ -401,69 +396,52 @@ get_icon_path() {
 
 cmd_install() {
     printf "\n$(t install_title)\n\n"
+    read -p "$(t install_name)" NAME
+    NAME=$(echo "$NAME" | tr -d ' ')
 
-    read -p "$(t install_name)" NAZWA
-    NAZWA=$(echo "$NAZWA" | tr -d ' ')
-
-    if [[ -z "$NAZWA" ]]; then
-        echo "$(t install_name_error)"
+    if [[ ! "$NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "Błąd: tylko litery, cyfry, _ i -"
         return 1
     fi
 
-    if [[ -f "${APPS_CONFIG_DIR}/${NAZWA}.cfg" ]] || [[ -f "${WRAPPER_DIR}/${NAZWA}-app" ]]; then
-        printf "$(t install_exists)\n" "$NAZWA"
+    if [[ -f "${APPS_CONFIG_DIR}/${NAME}.cfg" ]] || [[ -f "${WRAPPER_DIR}/${NAME}-app" ]]; then
+        printf "$(t install_exists)\n" "$NAME"
         return 1
     fi
 
     read -p "$(t install_url)" URL
-    if [[ -z "$URL" ]]; then
-        echo "$(t install_url_error)"
-        return 1
-    fi
+    [[ -z "$URL" ]] && echo "$(t install_url_error)" && return 1
 
     FLAGS=$(ask_flags)
     printf "\n$(t install_flags_choice)\n" "$FLAGS"
 
-    # Wybór ikony
+    read -p "Dodatkowe własne flagi [ENTER=brak]: " CUSTOM_FLAGS
+
     echo ""
     if [[ "$LANG_CHOICE" == "en" ]]; then
         echo "Enter the name of the icon file from the selected folder."
-        echo ""
-        read -p "$DEFAULT_ICON_PATH: " ICON_INPUT
-        echo ""
     else
         echo "Podaj nazwe pliku ikony z wybranego folderu."
-        echo ""
-        read -p "$DEFAULT_ICON_PATH: " ICON_INPUT
-        echo ""
     fi
+    read -p "$DEFAULT_ICON_PATH: " ICON_INPUT
 
     local ICON_LINE=""
     if [[ -n "$ICON_INPUT" ]]; then
-        if [[ -f "$ICON_INPUT" ]]; then
-            ICON_PATH="$ICON_INPUT"
-        elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then
-            ICON_PATH="${DEFAULT_ICON_PATH}/${ICON_INPUT}"
-        else
-            if [[ "$LANG_CHOICE" == "en" ]]; then
-                echo "Warning: File '$ICON_INPUT' not found"
-            else
-                echo "Ostrzeżenie: Nie znaleziono pliku '$ICON_INPUT'"
-            fi
-            ICON_PATH=""
-        fi
+        mkdir -p "$ICON_DIR"
+        if [[ -f "$ICON_INPUT" ]]; then ICON_PATH="$ICON_INPUT"
+        elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then ICON_PATH="${DEFAULT_ICON_PATH}/${ICON_INPUT}"
+        else ICON_PATH=""; fi
 
         if [[ -n "$ICON_PATH" && -f "$ICON_PATH" ]]; then
             local EXT="${ICON_PATH##*.}"
-            local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
+            local ICON_DEST="${ICON_DIR}/${NAME}.${EXT}"
             cp "$ICON_PATH" "$ICON_DEST"
             ICON_LINE="$ICON_DEST"
             printf "$(t install_icon_copied)\n" "$ICON_LINE"
         fi
     fi
 
-    echo ""
-    write_app_files "$NAZWA" "$URL" "$ICON_LINE" "$FLAGS"
+    write_app_files "$NAME" "$URL" "$ICON_LINE" "$FLAGS" "$CUSTOM_FLAGS"
 }
 
 cmd_list() {
@@ -490,48 +468,37 @@ cmd_list() {
 
 cmd_edit() {
     printf "\n$(t edit_title)\n\n"
-
     local apps=()
-    local i=1
+    shopt -s nullglob
     for cfg in "$APPS_CONFIG_DIR"/*.cfg; do
-        if [[ -f "$cfg" ]]; then
-            source "$cfg"
-            apps+=("$NAZWA")
-            echo "$i. $NAZWA"
-            ((i++))
-        fi
+        # czytamy w subshellu żeby nie zaśmiecać zmiennych
+        local app_name=$(bash -c "source \"$cfg\"; echo \${NAME:-\$NAZWA}")
+        [[ -n "$app_name" ]] && apps+=("$app_name") && echo "${#apps[@]}. $app_name"
     done
+    shopt -u nullglob
 
-    if [[ ${#apps[@]} -eq 0 ]]; then
-        echo "$(t edit_empty)"
-        return 0
-    fi
+    [[ ${#apps[@]} -eq 0 ]] && echo "$(t edit_empty)" && return 0
 
-    echo ""
     read -p "$(t edit_prompt)" num
+    [[ ! "$num" =~ ^[0-9]+$ ]] || (( num < 1 || num > ${#apps[@]} )) && echo "$(t edit_invalid)" && return 1
 
-    if [[ ! "$num" =~ ^[0-9]+$ ]] || [[ "$num" -lt 1 ]] || [[ "$num" -gt ${#apps[@]} ]]; then
-        echo "$(t edit_invalid)"
-        return 1
-    fi
-
-    local NAZWA="${apps[$((num-1))]}"
-    local CFG="${APPS_CONFIG_DIR}/${NAZWA}.cfg"
+    local NAME="${apps[$((num-1))]}"
+    local CFG="${APPS_CONFIG_DIR}/${NAME}.cfg"
     source "$CFG"
+    NAME="${NAME:-$NAZWA}" # fallback dla starych
 
-    printf "\n$(t edit_info)\n" "$NAZWA"
+    printf "\n$(t edit_info)\n" "$NAME"
     printf "$(t edit_current_url)\n" "$URL"
-    echo ""
-
     read -p "$(t edit_new_url)" NEW_URL
     [[ -z "$NEW_URL" ]] && NEW_URL="$URL"
 
     printf "$(t edit_current_flags)\n" "$FLAGS"
-    echo ""
-
     FLAGS=$(ask_flags)
 
-    # Wybór nowej ikony
+    echo "Obecne custom flagi: $CUSTOM_FLAGS"
+    read -p "Nowe custom flagi [ENTER=zostaw]: " NEW_CUSTOM
+    [[ -n "$NEW_CUSTOM" ]] && CUSTOM_FLAGS="$NEW_CUSTOM"
+
     echo ""
     if [[ "$LANG_CHOICE" == "en" ]]; then
         echo "New icon file (ENTER = keep current, or enter filename from default folder: $DEFAULT_ICON_PATH):"
@@ -542,30 +509,21 @@ cmd_edit() {
 
     local ICON_LINE="$ICON"
     if [[ -n "$ICON_INPUT" ]]; then
-        if [[ -f "$ICON_INPUT" ]]; then
-            ICON_PATH="$ICON_INPUT"
-        elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then
-            ICON_PATH="${DEFAULT_ICON_PATH}/${ICON_INPUT}"
-        else
-            if [[ "$LANG_CHOICE" == "en" ]]; then
-                echo "Warning: File '$ICON_INPUT' not found. Keeping current icon."
-            else
-                echo "Ostrzeżenie: Nie znaleziono pliku '$ICON_INPUT'. Zostawiam obecną ikonę."
-            fi
-            ICON_PATH=""
-        fi
+        mkdir -p "$ICON_DIR"
+        if [[ -f "$ICON_INPUT" ]]; then ICON_PATH="$ICON_INPUT"
+        elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then ICON_PATH="${DEFAULT_ICON_PATH}/${ICON_INPUT}"
+        else ICON_PATH=""; fi
 
         if [[ -n "$ICON_PATH" && -f "$ICON_PATH" ]]; then
             local EXT="${ICON_PATH##*.}"
-            local ICON_DEST="${ICON_DIR}/${NAZWA}.${EXT}"
+            local ICON_DEST="${ICON_DIR}/${NAME}.${EXT}"
             cp "$ICON_PATH" "$ICON_DEST"
             ICON_LINE="$ICON_DEST"
             printf "$(t edit_icon_updated)\n" "$ICON_LINE"
         fi
     fi
 
-    echo ""
-    write_app_files "$NAZWA" "$NEW_URL" "$ICON_LINE" "$FLAGS"
+    write_app_files "$NAME" "$NEW_URL" "$ICON_LINE" "$FLAGS" "$CUSTOM_FLAGS"
 }
 
 cmd_remove() {
