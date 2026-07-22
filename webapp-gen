@@ -3,9 +3,8 @@
 
 set -e
 
-WRAPPER_DIR="~/.local/bin/webapp-list"
-USER_HOME="${SUDO_USER:+/home/$SUDO_USER}"
-USER_HOME="${USER_HOME:-$HOME}"
+USER_HOME="$HOME"
+WRAPPER_DIR="${USER_HOME}/.local/bin/webapp-list"
 DESKTOP_DIR="${USER_HOME}/.local/share/applications"
 ICON_DIR="${USER_HOME}/.local/share/icons/webapp-ico"
 CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
