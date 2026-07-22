@@ -51,16 +51,16 @@ fish_add_path ~/.local/bin
 ## Usage
 
 ```bash
-webapp-gen
+ =======================-------- 
+ ===   webapp-gen
+ ==================== + + v0.9.1 
 
-=== webapp-gen === v0.9-alpha
+ 1. Install new app
+ 2. List (Info/Edit/Remove)
+ 3. Settings
+ 4. Exit / Q = Exit
 
-1. Install new app
-2. List (Info/Edit/Remove)
-3. Settings
-4. Exit / Q = Exit
-
-Choose option [1-4] or 'q' to quit:
+ Choose option [1-4] or 'q' to quit:
 ```
 
 ### 1. Install new app
@@ -74,21 +74,26 @@ Choose option [1-4] or 'q' to quit:
 New in 0.9-alpha - unified view.
 
 ```
-=== Installed webapps ===
+ =======================-------- 
+ ===   Installed 
+ ==================== + + v0.9.1 
 
- 1. youtube
- 2. claude
+ 1. google
+ 2. youtube
 
- p - back
- q - quit
 
-Select app number (p=back, q=quit):
+ p - back 
+ q - quit 
+
+ Select app number (p=back, q=quit):
 ```
 
 After selecting:
 
 ```
-=== Details ===
+ =======================-------- 
+ ===   Details 
+ ==================== + + v0.9.1 
 
   Name: youtube
   URL: https://youtube.com
@@ -117,7 +122,11 @@ Change language `pl/en` and default icon path. Stored in `~/.config/webapp-gen/c
 On first run:
 
 ```
-Select language / Wybierz język:
+ ╔════════════════════════════════════════╗
+ ║          webapp-gen - FIRST RUN        ║
+ ╚════════════════════════════════════════╝
+
+ Select language / Wybierz język:
   1. Polski
   2. English
 ```
@@ -157,7 +166,7 @@ Script config `~/.config/webapp-gen/config.cfg`:
 ```ini
 # webapp-gen config
 LANG_CHOICE="en"
-DEFAULT_ICON_PATH="/home/user/Obrazy"
+DEFAULT_ICON_PATH="/home/user/Pictures"
 ```
 
 ## Chromium Flags
