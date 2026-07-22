@@ -99,7 +99,7 @@ t() {
             "menu_edit") echo "3. Edit app" ;;
             "menu_config") echo "4. Configuration" ;;
             "menu_remove") echo "5. Remove app" ;;
-            "menu_exit") echo "6. Exit" ;;
+            "menu_exit") echo "6. Exit / Q = Instant" ;;
             "menu_prompt") echo "Choose option [1-6]: " ;;
             "menu_invalid") echo "Invalid option!" ;;
             "goodbye") echo "Goodbye!" ;;
@@ -146,7 +146,8 @@ t() {
             "config_done") echo "Configuration saved!" ;;
 
             "bad_number") echo "Bad number!" ;;
-            "press_enter") echo "Press Enter to continue..." ;;
+            "menu_prompt") echo "Choose option [1-6] or 'q' to quit: " ;;
+            "press_enter") echo "Press any key to continue... (or 'q' to quit) " ;;
         esac
     else
         # Polski domyślnie
@@ -157,7 +158,7 @@ t() {
             "menu_edit") echo "3. Edytuj appkę" ;;
             "menu_config") echo "4. Konfiguracja" ;;
             "menu_remove") echo "5. Usuń appkę" ;;
-            "menu_exit") echo "6. Wyjście" ;;
+            "menu_exit") echo "6. Wyjście / Q = Instant" ;;
             "menu_prompt") echo "Wybierz opcję [1-6]: " ;;
             "menu_invalid") echo "Nieprawidłowa opcja!" ;;
             "goodbye") echo "Do widzenia!" ;;
@@ -204,7 +205,8 @@ t() {
             "config_done") echo "Konfiguracja zapisana!" ;;
 
             "bad_number") echo "Błędny numer!" ;;
-            "press_enter") echo "Naciśnij Enter aby kontynuować..." ;;
+            "menu_prompt") echo "Wybierz opcję [1-6] lub 'q' aby wyjść: " ;;
+            "press_enter") echo "Wciśnij dowolny klawisz aby kontynuować... (lub 'q' aby wyjść) " ;;
         esac
     fi
 }
@@ -596,6 +598,7 @@ EOF
 }
 
 main_menu() {
+    clear
     printf "\n$(t menu_title)\n"
     echo "$(t menu_install)"
     echo "$(t menu_list)"
@@ -605,7 +608,14 @@ main_menu() {
     echo "$(t menu_exit)"
     echo ""
 
-    read -p "$(t menu_prompt)" choice
+    read -n 1 -p "$(t menu_prompt)" choice
+    echo ""  # Nowa linia po wciśnięciu klawisza
+
+    # Obsługa q w menu
+    if [[ "$choice" == "q" ]] || [[ "$choice" == "Q" ]]; then
+        echo "$(t goodbye)"
+        exit 0
+    fi
 
     case "$choice" in
         1) cmd_install ;;
@@ -614,7 +624,10 @@ main_menu() {
         4) cmd_config ;;
         5) cmd_remove ;;
         6) echo "$(t goodbye)"; exit 0 ;;
-        *) echo "$(t menu_invalid)" ;;
+        *)
+            echo "$(t menu_invalid)"
+            sleep 1
+            ;;
     esac
 }
 
@@ -638,7 +651,14 @@ case "$1" in
         while true; do
             main_menu
             echo ""
-            read -p "$(t press_enter)"
+            read -n 1 -p "$(t press_enter)" input
+            echo ""  # Nowa linia po wciśnięciu klawisza
+
+            if [[ "$input" == "q" ]] || [[ "$input" == "Q" ]]; then
+                echo "$(t goodbye)"
+                exit 0
+            fi
+            # Dla Enter lub innych klawiszy - kontynuuj
         done
         ;;
     *)
