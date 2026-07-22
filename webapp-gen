@@ -13,7 +13,7 @@ init_globals() {
     CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
     CONFIG_FILE="${CONFIG_DIR}/config.cfg"
     APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
-    VERSION="0.6a"
+    VERSION="0.9-alpha"
 }
 
 # ----------------
@@ -133,6 +133,7 @@ t() {
             "detail_opt_back") echo "  p - Back to list" ;;
             "detail_opt_quit") echo "  q - Quit" ;;
             "detail_prompt") echo "Choose [e/r/p/q]: " ;;
+            "info_none") echo " -<none> " ;;
             "edit_current_url") echo "Current URL: %s" ;;
             "edit_new_url") echo "New URL (ENTER = keep current): " ;;
             "edit_current_flags") echo "Current flags: %s" ;;
@@ -141,10 +142,17 @@ t() {
             "remove_done") echo "Removed: %s" ;;
             "edit_invalid") echo "Invalid number!" ;;
             "remove_invalid") echo "Invalid number!" ;;
+            "custom_current") echo "Current custom flags: %s" ;;
+            "custom_action") echo "Custom flags [ENTER=keep / n=new / c=clear]: " ;;
+            "custom_new") echo "Enter new custom flags: " ;;
+            "custom_cleared") echo "Custom flags cleared." ;;
             "config_title") echo "=== Configuration ===" ;;
             "config_lang") echo "Language (pl/en) [current: %s]: " ;;
             "config_icon_path") echo "Default icon path [current: %s]: " ;;
             "config_done") echo "Configuration saved!" ;;
+            "key_p_q") echo " p - back / q - quit" ;;
+            "key_p") echo " p - back " ;;
+            "key_q") echo " q - quit " ;;
             "press_enter") echo "Press any key to continue... (or 'q' to quit) " ;;
         esac
     else
@@ -186,6 +194,7 @@ t() {
             "detail_opt_back") echo "  p - Powrót do listy" ;;
             "detail_opt_quit") echo "  q - Wyjście" ;;
             "detail_prompt") echo "Wybierz [e/r/p/q]: " ;;
+            "info_none") echo " -<brak> " ;;
             "edit_current_url") echo "Obecny URL: %s" ;;
             "edit_new_url") echo "Nowy URL (ENTER = zostaw obecny): " ;;
             "edit_current_flags") echo "Obecne flagi: %s" ;;
@@ -194,10 +203,17 @@ t() {
             "remove_done") echo "Usunięto: %s" ;;
             "edit_invalid") echo "Błędny numer!" ;;
             "remove_invalid") echo "Błędny numer!" ;;
+            "custom_current") echo "Obecne custom flagi: %s" ;;
+            "custom_action") echo "Custom flagi [ENTER=zostaw / n=nowe / c=usuń]: " ;;
+            "custom_new") echo "Podaj nowe custom flagi: " ;;
+            "custom_cleared") echo "Custom flagi usunięte." ;;
             "config_title") echo "=== Konfiguracja ===" ;;
             "config_lang") echo "Język (pl/en) [obecny: %s]: " ;;
             "config_icon_path") echo "Domyślna ścieżka do ikon [obecna: %s]: " ;;
             "config_done") echo "Konfiguracja zapisana!" ;;
+            "key_p_q") echo " p - powrót / q - wyjście" ;;
+            "key_p") echo " p - powrót " ;;
+            "key_q") echo " q - wyjście " ;;
             "press_enter") echo "Wciśnij dowolny klawisz aby kontynuować... (lub 'q' aby wyjść) " ;;
         esac
     fi
@@ -247,6 +263,42 @@ ask_flags() {
     ask_single_flag "Incognito (--incognito) [y/N]: " "Tryb incognito (--incognito) [y/N]: " "no" && flags+=("--incognito")
     ask_single_flag "Maximized (--start-maximized) [y/N]: " "Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " "no" && flags+=("--start-maximized")
     echo "${flags[@]}"
+}
+
+# ----------------
+#          Obsługuje edycję custom flag w trybie ENTER/n/c
+# -----------------
+handle_custom_flags_edit() {
+    local current_flags="$1"
+    local new_flags
+    local action_choice
+
+    if [[ -z "$current_flags" ]]; then
+        printf "$(t custom_current)\n" "<brak / none>" >&2
+    else
+        printf "$(t custom_current)\n" "$current_flags" >&2
+    fi
+
+    read -p "$(t custom_action)" action_choice
+
+    case "$action_choice" in
+        "") # ENTER = zostaw
+            new_flags="$current_flags"
+            ;;
+        n|N) # nowe
+            read -p "$(t custom_new)" new_flags
+            ;;
+        c|C) # usuń
+            new_flags=""
+            echo "$(t custom_cleared)" >&2
+            ;;
+        *)
+            new_flags="$current_flags"
+            ;;
+    esac
+
+    # TYLKO to idzie na stdout -> do NEW_CUSTOM
+    echo "$new_flags"
 }
 
 # ----------------
@@ -353,12 +405,12 @@ show_app_details() {
     printf "$(t detail_title)\n\n"
     printf "$(t detail_name)\n" "$DISPLAY_NAME"
     printf "$(t detail_url)\n" "$URL"
-    printf "$(t detail_icon)\n" "${ICON:-<brak>}"
+    printf "$(t detail_icon)\n" "${ICON:info_none}"
     printf "$(t detail_wrapper)\n" "$WRAPPER_PATH"
     printf "$(t detail_desktop)\n" "$DESKTOP_FILE"
     printf "$(t detail_config)\n" "$CFG_PATH"
     printf "$(t detail_flags)\n" "$FLAGS"
-    printf "$(t detail_custom)\n" "${CUSTOM_FLAGS:-<brak>}"
+    printf "$(t detail_custom)\n" "${CUSTOM_FLAGS:info_none}"
     echo ""
     echo "$(t detail_options)"
     echo ""
@@ -388,10 +440,9 @@ edit_app_direct() {
     local NEW_FLAGS
     NEW_FLAGS=$(ask_flags)
 
-    echo "Obecne custom flagi: $CUSTOM_FLAGS"
+    # NOWA LOGIKA: ENTER=zostaw / n=nowe / c=usuń
     local NEW_CUSTOM
-    read -p "Nowe custom flagi [ENTER=zostaw]: " NEW_CUSTOM
-    [[ -z "$NEW_CUSTOM" ]] && NEW_CUSTOM="$CUSTOM_FLAGS"
+    NEW_CUSTOM=$(handle_custom_flags_edit "$CUSTOM_FLAGS")
 
     if [[ "$LANG_CHOICE" == "en" ]]; then
         echo "New icon file (ENTER = keep current):"
@@ -473,7 +524,8 @@ cmd_list() {
             ((i++))
         done
         echo ""
-        echo " p - powrót / q - wyjście"
+        printf "\n$(t key_p)"
+        printf "\n$(t key_q)\n"
         echo ""
 
         local sel
