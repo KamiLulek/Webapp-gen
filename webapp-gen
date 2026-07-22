@@ -13,7 +13,8 @@ init_globals() {
     CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
     CONFIG_FILE="${CONFIG_DIR}/config.cfg"
     APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
-    VERSION="0.9-alpha"
+    VERSION="v0.9.1"
+    VERSION_PLUS="+ + v0.9.1"
 }
 
 # ----------------
@@ -42,40 +43,41 @@ load_lang() {
 #          Pierwsze uruchomienie - wybór języka i domyślnej ścieżki ikon
 # -----------------
 first_time_config() {
+    clear
     echo ""
-    echo "╔════════════════════════════════════════╗"
-    echo "║          webapp-gen - FIRST RUN        ║"
-    echo "╚════════════════════════════════════════╝"
+    echo " ╔════════════════════════════════════════╗"
+    echo " ║          webapp-gen - FIRST RUN        ║"
+    echo " ╚════════════════════════════════════════╝"
     echo ""
-    echo "Select language / Wybierz język:"
+    echo " Select language / Wybierz język:"
     echo "  1. Polski"
     echo "  2. English"
     echo ""
-    read -p "Choose / Wybierz [1-2]: " lang_choice
+    read -p " Choose / Wybierz [1-2]: " lang_choice
     case "$lang_choice" in
-        2) LANG_CHOICE="en"; echo ""; echo "Selected: English" ;;
-        *) LANG_CHOICE="pl"; echo ""; echo "Wybrano: Polski" ;;
+        2) LANG_CHOICE="en"; echo ""; echo " Selected: English" ;;
+        *) LANG_CHOICE="pl"; echo ""; echo " Wybrano: Polski" ;;
     esac
     echo ""
     if [[ "$LANG_CHOICE" == "en" ]]; then
-        echo "Enter default path for icons:"
+        echo " Enter default path for icons:"
         echo "  (ENTER for default: ${USER_HOME})"
-        read -p "Set path: " icon_path_input
+        read -p " Set path: " icon_path_input
     else
-        echo "Podaj domyślną ścieżkę dla ikon:"
+        echo " Podaj domyślną ścieżkę dla ikon:"
         echo "  (ENTER dla domyślnej: ${USER_HOME})"
-        read -p "Ustaw ścieżkę: " icon_path_input
+        read -p " Ustaw ścieżkę: " icon_path_input
     fi
     [[ -n "$icon_path_input" ]] && DEFAULT_ICON_PATH="$icon_path_input"
     save_config
     echo ""
     if [[ "$LANG_CHOICE" == "en" ]]; then
-        echo "Configuration saved to: $CONFIG_FILE"
+        echo " Configuration saved to: $CONFIG_FILE"
     else
-        echo "Konfiguracja zapisana w: $CONFIG_FILE"
+        echo " Konfiguracja zapisana w: $CONFIG_FILE"
     fi
     echo ""
-    read -p "Press Enter to continue..."
+    read -p " Press Enter to continue..."
 }
 
 # ----------------
@@ -96,29 +98,31 @@ t() {
     local key="$1"; shift
     if [[ "$LANG_CHOICE" == "en" ]]; then
         case "$key" in
-            "version_title") echo "v$VERSION " ;;
-            "menu_title") echo "=== webapp-gen ===" ;;
-            "menu_install") echo "1. Install new app" ;;
-            "menu_list") echo "2. List (Info/Edit/Remove)" ;;
-            "menu_config") echo "3. Settings" ;;
-            "menu_exit") echo "4. Exit / Q = Exit" ;;
-            "menu_prompt") echo "Choose option [1-4] or 'q' to quit: " ;;
-            "menu_invalid") echo "Invalid option!" ;;
-            "goodbye") echo "Goodbye!" ;;
-            "install_title") echo "=== Install new webapp ===" ;;
-            "install_name") echo "Name (no spaces): " ;;
-            "install_name_error") echo "Error: Name cannot be empty!" ;;
-            "install_exists") echo "Error: App '%s' already exists!" ;;
-            "install_url") echo "URL: " ;;
-            "install_url_error") echo "Error: URL cannot be empty!" ;;
-            "install_flags_title") echo "Select chromium flags (Y or N):" ;;
-            "install_flags_choice") echo "Flags selected: %s" ;;
-            "install_icon_copied") echo "Icon copied: %s" ;;
-            "install_done") echo "Done: %s" ;;
-            "list_title") echo "=== Installed webapps ===" ;;
-            "list_empty") echo "No installed apps." ;;
-            "list_select_prompt") echo "Select app number (p=back, q=quit): " ;;
-            "detail_title") echo "=== Details ===" ;;
+            "version_title") echo "$VERSION " ;;
+            "separator_up") echo " =======================-------- " ;;
+            "separator_down") echo " ==================== $VERSION_PLUS " ;;
+            "menu_title") echo " ===   webapp-gen" ;;
+            "menu_install") echo " 1. Install new app" ;;
+            "menu_list") echo " 2. List (Info/Edit/Remove)" ;;
+            "menu_config") echo " 3. Settings" ;;
+            "menu_exit") echo " 4. Exit / Q = Exit" ;;
+            "menu_prompt") echo " Choose option [1-4] or 'q' to quit: " ;;
+            "menu_invalid") echo " Invalid option!" ;;
+            "goodbye") echo " Goodbye!" ;;
+            "install_title") echo " ===   Install " ;;
+            "install_name") echo " Name (no spaces): " ;;
+            "install_name_error") echo " Error: Name cannot be empty!" ;;
+            "install_exists") echo " Error: App '%s' already exists!" ;;
+            "install_url") echo " URL: " ;;
+            "install_url_error") echo " Error: URL cannot be empty!" ;;
+            "install_flags_title") echo " Select chromium flags (Y or N):" ;;
+            "install_flags_choice") echo " Flags selected: %s" ;;
+            "install_icon_copied") echo " Icon copied: %s" ;;
+            "install_done") echo " Done: %s" ;;
+            "list_title") echo " ===   Installed " ;;
+            "list_empty") echo " No installed apps." ;;
+            "list_select_prompt") echo " Select app number (p=back, q=quit): " ;;
+            "detail_title") echo " ===   Details " ;;
             "detail_name") echo "  Name: %s" ;;
             "detail_url") echo "  URL: %s" ;;
             "detail_flags") echo "  Flags: %s" ;;
@@ -127,59 +131,61 @@ t() {
             "detail_wrapper") echo "  Wrapper: %s" ;;
             "detail_desktop") echo "  Desktop: %s" ;;
             "detail_config") echo "  Config: %s" ;;
-            "detail_options") echo "--- Actions ---" ;;
+            "detail_options") echo " --- Actions ---" ;;
             "detail_opt_edit") echo "  e - Edit" ;;
             "detail_opt_remove") echo "  r - Remove" ;;
             "detail_opt_back") echo "  p - Back to list" ;;
             "detail_opt_quit") echo "  q - Quit" ;;
-            "detail_prompt") echo "Choose [e/r/p/q]: " ;;
+            "detail_prompt") echo " Choose [e/r/p/q]: " ;;
             "info_none") echo " -<none> " ;;
-            "edit_current_url") echo "Current URL: %s" ;;
-            "edit_new_url") echo "New URL (ENTER = keep current): " ;;
-            "edit_current_flags") echo "Current flags: %s" ;;
-            "edit_icon_updated") echo "Icon updated: %s" ;;
-            "remove_confirm") echo "Are you sure you want to remove '%s'? [y/N]: " ;;
-            "remove_done") echo "Removed: %s" ;;
-            "edit_invalid") echo "Invalid number!" ;;
-            "remove_invalid") echo "Invalid number!" ;;
-            "custom_current") echo "Current custom flags: %s" ;;
-            "custom_action") echo "Custom flags [ENTER=keep / n=new / c=clear]: " ;;
-            "custom_new") echo "Enter new custom flags: " ;;
-            "custom_cleared") echo "Custom flags cleared." ;;
-            "config_title") echo "=== Configuration ===" ;;
-            "config_lang") echo "Language (pl/en) [current: %s]: " ;;
-            "config_icon_path") echo "Default icon path [current: %s]: " ;;
-            "config_done") echo "Configuration saved!" ;;
+            "edit_current_url") echo " Current URL: %s" ;;
+            "edit_new_url") echo " New URL (ENTER = keep current): " ;;
+            "edit_current_flags") echo " Current flags: %s" ;;
+            "edit_icon_updated") echo " Icon updated: %s" ;;
+            "remove_confirm") echo " Are you sure you want to remove '%s'? [y/N]: " ;;
+            "remove_done") echo " Removed: %s" ;;
+            "edit_invalid") echo " Invalid number!" ;;
+            "remove_invalid") echo " Invalid number!" ;;
+            "custom_current") echo " Current custom flags: %s" ;;
+            "custom_action") echo " Custom flags [ENTER=keep / n=new / c=clear]: " ;;
+            "custom_new") echo " Enter new custom flags: " ;;
+            "custom_cleared") echo " Custom flags cleared." ;;
+            "config_title") echo " ===   Configuration " ;;
+            "config_lang") echo " Language (pl/en) [current: %s]: " ;;
+            "config_icon_path") echo " Default icon path [current: %s]: " ;;
+            "config_done") echo " Configuration saved!" ;;
             "key_p_q") echo " p - back / q - quit" ;;
             "key_p") echo " p - back " ;;
             "key_q") echo " q - quit " ;;
-            "press_enter") echo "Press any key to continue... (or 'q' to quit) " ;;
+            "press_enter") echo " Press any key to continue... (or 'q' to quit) " ;;
         esac
     else
         case "$key" in
-            "version_title") echo "v$VERSION " ;;
-            "menu_title") echo "=== webapp-gen ===" ;;
-            "menu_install") echo "1. Instalacja" ;;
-            "menu_list") echo "2. Lista (Info/Edycja/Usuń)" ;;
-            "menu_config") echo "3. Ustawienia" ;;
-            "menu_exit") echo "4. Wyjście / Q = Wyjście" ;;
-            "menu_prompt") echo "Wybierz opcję [1-4] lub 'q' aby wyjść: " ;;
-            "menu_invalid") echo "Nieprawidłowa opcja!" ;;
-            "goodbye") echo "Do widzenia!" ;;
-            "install_title") echo "=== Instalacja nowej appki webowej ===" ;;
-            "install_name") echo "Nazwa (bez spacji): " ;;
-            "install_name_error") echo "Błąd: Nazwa nie może być pusta!" ;;
-            "install_exists") echo "Błąd: Appka '%s' już istnieje!" ;;
-            "install_url") echo "URL: " ;;
-            "install_url_error") echo "Błąd: URL nie może być pusty!" ;;
-            "install_flags_title") echo "Wybierz flagi dla chromium (wpisz Y lub N):" ;;
-            "install_flags_choice") echo "Wybrane flagi: %s" ;;
-            "install_icon_copied") echo "Ikona skopiowana: %s" ;;
-            "install_done") echo "Gotowe: %s" ;;
-            "list_title") echo "=== Zainstalowane webappki ===" ;;
-            "list_empty") echo "Brak zainstalowanych appek." ;;
-            "list_select_prompt") echo "Wybierz numer appki (p=powrót, q=wyjście): " ;;
-            "detail_title") echo "=== Szczegóły ===" ;;
+            "version_title") echo "$VERSION " ;;
+            "separator_up") echo " =======================-------- " ;;
+            "separator_down") echo " ==================== $VERSION_PLUS " ;;
+            "menu_title") echo " ===   webapp-gen " ;;
+            "menu_install") echo " 1. Instalacja" ;;
+            "menu_list") echo " 2. Lista (Info/Edycja/Usuń)" ;;
+            "menu_config") echo " 3. Ustawienia" ;;
+            "menu_exit") echo " 4. Wyjście / Q = Wyjście" ;;
+            "menu_prompt") echo " Wybierz opcję [1-4] lub 'q' aby wyjść: " ;;
+            "menu_invalid") echo " Nieprawidłowa opcja!" ;;
+            "goodbye") echo " Do widzenia!" ;;
+            "install_title") echo " ===   Instalacja " ;;
+            "install_name") echo " Nazwa (bez spacji): " ;;
+            "install_name_error") echo " Błąd: Nazwa nie może być pusta!" ;;
+            "install_exists") echo " Błąd: Appka '%s' już istnieje!" ;;
+            "install_url") echo " URL: " ;;
+            "install_url_error") echo " Błąd: URL nie może być pusty!" ;;
+            "install_flags_title") echo " Wybierz flagi dla chromium (wpisz Y lub N):" ;;
+            "install_flags_choice") echo " Wybrane flagi: %s" ;;
+            "install_icon_copied") echo " Ikona skopiowana: %s" ;;
+            "install_done") echo " Gotowe: %s" ;;
+            "list_title") echo " ===   Zainstalowane " ;;
+            "list_empty") echo " Brak zainstalowanych appek." ;;
+            "list_select_prompt") echo " Wybierz numer appki (p=powrót, q=wyjście): " ;;
+            "detail_title") echo " ===   Szczegóły " ;;
             "detail_name") echo "  Nazwa: %s" ;;
             "detail_url") echo "  URL: %s" ;;
             "detail_flags") echo "  Flagi: %s" ;;
@@ -188,33 +194,33 @@ t() {
             "detail_wrapper") echo "  Wrapper: %s" ;;
             "detail_desktop") echo "  Desktop: %s" ;;
             "detail_config") echo "  Config: %s" ;;
-            "detail_options") echo "--- Akcje ---" ;;
+            "detail_options") echo " --- Akcje ---" ;;
             "detail_opt_edit") echo "  e - Edytuj" ;;
             "detail_opt_remove") echo "  r - Usuń" ;;
             "detail_opt_back") echo "  p - Powrót do listy" ;;
             "detail_opt_quit") echo "  q - Wyjście" ;;
-            "detail_prompt") echo "Wybierz [e/r/p/q]: " ;;
+            "detail_prompt") echo " Wybierz [e/r/p/q]: " ;;
             "info_none") echo " -<brak> " ;;
-            "edit_current_url") echo "Obecny URL: %s" ;;
-            "edit_new_url") echo "Nowy URL (ENTER = zostaw obecny): " ;;
-            "edit_current_flags") echo "Obecne flagi: %s" ;;
-            "edit_icon_updated") echo "Ikona zaktualizowana: %s" ;;
-            "remove_confirm") echo "Na pewno usunąć '%s'? [y/N]: " ;;
-            "remove_done") echo "Usunięto: %s" ;;
-            "edit_invalid") echo "Błędny numer!" ;;
-            "remove_invalid") echo "Błędny numer!" ;;
-            "custom_current") echo "Obecne custom flagi: %s" ;;
-            "custom_action") echo "Custom flagi [ENTER=zostaw / n=nowe / c=usuń]: " ;;
-            "custom_new") echo "Podaj nowe custom flagi: " ;;
-            "custom_cleared") echo "Custom flagi usunięte." ;;
-            "config_title") echo "=== Konfiguracja ===" ;;
-            "config_lang") echo "Język (pl/en) [obecny: %s]: " ;;
-            "config_icon_path") echo "Domyślna ścieżka do ikon [obecna: %s]: " ;;
-            "config_done") echo "Konfiguracja zapisana!" ;;
+            "edit_current_url") echo " Obecny URL: %s" ;;
+            "edit_new_url") echo " Nowy URL (ENTER = zostaw obecny): " ;;
+            "edit_current_flags") echo " Obecne flagi: %s" ;;
+            "edit_icon_updated") echo " Ikona zaktualizowana: %s" ;;
+            "remove_confirm") echo " Na pewno usunąć '%s'? [y/N]: " ;;
+            "remove_done") echo " Usunięto: %s" ;;
+            "edit_invalid") echo " Błędny numer!" ;;
+            "remove_invalid") echo " Błędny numer!" ;;
+            "custom_current") echo " Obecne custom flagi: %s" ;;
+            "custom_action") echo " Custom flagi [ENTER=zostaw / n=nowe / c=usuń]: " ;;
+            "custom_new") echo " Podaj nowe custom flagi: " ;;
+            "custom_cleared") echo " Custom flagi usunięte." ;;
+            "config_title") echo " ===   Konfiguracja " ;;
+            "config_lang") echo " Język (pl/en) [obecny: %s]: " ;;
+            "config_icon_path") echo " Domyślna ścieżka do ikon [obecna: %s]: " ;;
+            "config_done") echo " Konfiguracja zapisana!" ;;
             "key_p_q") echo " p - powrót / q - wyjście" ;;
             "key_p") echo " p - powrót " ;;
             "key_q") echo " q - wyjście " ;;
-            "press_enter") echo "Wciśnij dowolny klawisz aby kontynuować... (lub 'q' aby wyjść) " ;;
+            "press_enter") echo " Wciśnij dowolny klawisz aby kontynuować... (lub 'q' aby wyjść) " ;;
         esac
     fi
 }
@@ -224,7 +230,7 @@ t() {
 # -----------------
 need_pkexec() {
     if ! command -v pkexec &>/dev/null; then
-        echo "Brak pkexec (polkit). Zainstaluj: sudo pacman -S polkit"
+        echo " Brak pkexec (polkit). Zainstaluj: sudo pacman -S polkit"
         exit 1
     fi
 }
@@ -255,13 +261,13 @@ ask_flags() {
     echo "" >&2
     echo "$(t install_flags_title)" >&2
     echo "" >&2
-    ask_single_flag "Disable Google Translate (--disable-features=Translate,OptimizationGuide) [Y/n]: " "Wyłącz tłumacz Google (--disable-features=Translate,OptimizationGuide) [Y/n]: " "yes" && flags+=("--disable-features=Translate,OptimizationGuide")
-    ask_single_flag "Disable background networking (--disable-background-networking) [Y/n]: " "Wyłącz ruch w tle (--disable-background-networking) [Y/n]: " "yes" && flags+=("--disable-background-networking")
-    ask_single_flag "Disable extensions (--disable-extensions) [y/N]: " "Wyłącz rozszerzenia (--disable-extensions) [y/N]: " "no" && flags+=("--disable-extensions")
-    ask_single_flag "Disable sync (--disable-sync) [y/N]: " "Wyłącz synchronizację kont Google (--disable-sync) [y/N]: " "no" && flags+=("--disable-sync")
-    ask_single_flag "Disable GPU (--disable-gpu) [y/N]: " "Wyłącz akcelerację GPU (--disable-gpu) [y/N]: " "no" && flags+=("--disable-gpu")
-    ask_single_flag "Incognito (--incognito) [y/N]: " "Tryb incognito (--incognito) [y/N]: " "no" && flags+=("--incognito")
-    ask_single_flag "Maximized (--start-maximized) [y/N]: " "Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " "no" && flags+=("--start-maximized")
+    ask_single_flag " Disable Google Translate (--disable-features=Translate,OptimizationGuide) [Y/n]: " " Wyłącz tłumacz Google (--disable-features=Translate,OptimizationGuide) [Y/n]: " "yes" && flags+=("--disable-features=Translate,OptimizationGuide")
+    ask_single_flag " Disable background networking (--disable-background-networking) [Y/n]: " " Wyłącz ruch w tle (--disable-background-networking) [Y/n]: " "yes" && flags+=("--disable-background-networking")
+    ask_single_flag " Disable extensions (--disable-extensions) [y/N]: " " Wyłącz rozszerzenia (--disable-extensions) [y/N]: " "no" && flags+=("--disable-extensions")
+    ask_single_flag " Disable sync (--disable-sync) [y/N]: " " Wyłącz synchronizację kont Google (--disable-sync) [y/N]: " "no" && flags+=("--disable-sync")
+    ask_single_flag " Disable GPU (--disable-gpu) [y/N]: " " Wyłącz akcelerację GPU (--disable-gpu) [y/N]: " "no" && flags+=("--disable-gpu")
+    ask_single_flag " Incognito (--incognito) [y/N]: " " Tryb incognito (--incognito) [y/N]: " "no" && flags+=("--incognito")
+    ask_single_flag " Maximized (--start-maximized) [y/N]: " " Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " "no" && flags+=("--start-maximized")
     echo "${flags[@]}"
 }
 
@@ -401,8 +407,9 @@ show_app_details() {
     local WRAPPER_PATH="${WRAPPER_DIR}/${DISPLAY_NAME}-app"
     local DESKTOP_FILE="${DESKTOP_DIR}/${DISPLAY_NAME}.desktop"
 
-    echo ""
-    printf "$(t detail_title)\n\n"
+    printf "\n$(t separator_up)"
+    printf "\n$(t detail_title)"
+    printf "\n$(t separator_down)\n\n"
     printf "$(t detail_name)\n" "$DISPLAY_NAME"
     printf "$(t detail_url)\n" "$URL"
     printf "$(t detail_icon)\n" "${ICON:info_none}"
@@ -445,12 +452,12 @@ edit_app_direct() {
     NEW_CUSTOM=$(handle_custom_flags_edit "$CUSTOM_FLAGS")
 
     if [[ "$LANG_CHOICE" == "en" ]]; then
-        echo "New icon file (ENTER = keep current):"
+        echo " New icon file (ENTER = keep current):"
     else
-        echo "Nowy plik ikony (ENTER = zostaw obecną):"
+        echo " Nowy plik ikony (ENTER = zostaw obecną):"
     fi
     local ICON_INPUT ICON_PATH
-    read -p "> " ICON_INPUT
+    read -p " > " ICON_INPUT
 
     local ICON_LINE="$ICON"
     if ICON_PATH=$(resolve_icon_path "$ICON_INPUT" "$DEFAULT_ICON_PATH"); then
@@ -481,20 +488,22 @@ remove_app_direct() {
 #          Instaluje nową apkę - pyta o nazwę, URL, flagi i ikonę
 # -----------------
 cmd_install() {
-    printf "\n$(t install_title)\n\n"
+    printf "\n$(t separator_up)"
+    printf "\n$(t install_title)"
+    printf "\n$(t separator_down)\n\n"
     local NAME URL FLAGS CUSTOM_FLAGS ICON_INPUT ICON_PATH ICON_LINE
     read -p "$(t install_name)" NAME
     NAME=$(echo "$NAME" | tr -d ' ')
     if [[ -z "$NAME" ]]; then echo "$(t install_name_error)"; return 1; fi
-    if [[ ! "$NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then echo "Błąd: tylko litery, cyfry, _ i -"; return 1; fi
+    if [[ ! "$NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then echo " Błąd: tylko litery, cyfry, _ i -"; return 1; fi
     if [[ -f "${APPS_CONFIG_DIR}/${NAME}.cfg" ]] || [[ -f "${WRAPPER_DIR}/${NAME}-app" ]]; then printf "$(t install_exists)\n" "$NAME"; return 1; fi
     read -p "$(t install_url)" URL
     if [[ -z "$URL" ]]; then echo "$(t install_url_error)"; return 1; fi
     FLAGS=$(ask_flags)
     printf "\n$(t install_flags_choice)\n" "$FLAGS"
-    read -p "Dodatkowe własne flagi [ENTER=brak]: " CUSTOM_FLAGS
+    read -p " Dodatkowe własne flagi [ENTER=brak]: " CUSTOM_FLAGS
     echo ""
-    if [[ "$LANG_CHOICE" == "en" ]]; then echo "Enter icon filename from folder."; else echo "Podaj nazwe pliku ikony z wybranego folderu."; fi
+    if [[ "$LANG_CHOICE" == "en" ]]; then echo " Enter icon filename from folder."; else echo " Podaj nazwe pliku ikony z wybranego folderu."; fi
     read -p "$DEFAULT_ICON_PATH: " ICON_INPUT
     ICON_LINE=""
     if ICON_PATH=$(resolve_icon_path "$ICON_INPUT" "$DEFAULT_ICON_PATH"); then
@@ -511,13 +520,16 @@ cmd_list() {
     while true; do
         get_all_apps
         if [[ ${#APPS[@]} -eq 0 ]]; then
+
             echo ""
             echo "$(t list_empty)"
             return 0
         fi
 
-        echo ""
-        printf "$(t list_title)\n\n"
+        clear
+        printf "\n$(t separator_up)"
+        printf "\n$(t list_title)"
+        printf "\n$(t separator_down)\n\n"
         local i=1
         for app_name in "${APPS[@]}"; do
             echo " $i. $app_name"
@@ -592,7 +604,10 @@ cmd_list() {
 #          Edytuje globalną konfigurację - język i ścieżkę ikon
 # -----------------
 cmd_config() {
-    printf "\n$(t config_title)\n\n"
+    clear
+    printf "\n$(t separator_up)"
+    printf "\n$(t config_title)"
+    printf "\n$(t separator_down)\n\n"
     local new_lang new_path
     read -p "$(printf "$(t config_lang)" "$LANG_CHOICE")" new_lang
     [[ -n "$new_lang" ]] && LANG_CHOICE="$new_lang"
@@ -607,8 +622,9 @@ cmd_config() {
 # -----------------
 main_menu() {
     clear
+    printf "\n$(t separator_up)"
     printf "\n$(t menu_title)"
-    printf "\n$(t version_title)\n\n"
+    printf "\n$(t separator_down)\n\n"
     echo "$(t menu_install)"
     echo "$(t menu_list)"
     echo "$(t menu_config)"
@@ -683,7 +699,7 @@ handle_cli_args() {
             echo "  webapp-gen -config      -> konfiguracja"
             ;;
         "") main_loop ;;
-        *) echo "Nieznana opcja: $1"; echo "Użyj 'webapp-gen -h' dla pomocy."; exit 1 ;;
+        *) echo " Nieznana opcja: $1"; echo " Użyj 'webapp-gen -h' dla pomocy."; exit 1 ;;
     esac
 }
 
