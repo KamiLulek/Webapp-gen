@@ -53,16 +53,16 @@ fish_add_path ~/.local/bin
 ## Użycie
 
 ```bash
-webapp-gen
+ =======================-------- 
+ ===   webapp-gen 
+ ==================== + + v0.9.1 
 
-=== webapp-gen === v0.9-alpha
+ 1. Instalacja
+ 2. Lista (Info/Edycja/Usuń)
+ 3. Ustawienia
+ 4. Wyjście / Q = Wyjście
 
-1. Instalacja
-2. Lista (Info/Edycja/Usuń)
-3. Ustawienia
-4. Wyjście / Q = Wyjście
-
-Wybierz opcję [1-4] lub 'q' aby wyjść:
+ Wybierz opcję [1-4] lub 'q' aby wyjść:
 ```
 
 ### 1. Instalacja
@@ -78,21 +78,26 @@ Walidacja: pusta nazwa -> błąd, istniejąca apka -> `Błąd: Appka '%s' już i
 Nowość w 0.9-alpha - wszystko w jednym miejscu.
 
 ```
-=== Zainstalowane webappki ===
+ =======================-------- 
+ ===   Zainstalowane 
+ ==================== + + v0.9.1 
 
- 1. youtube
- 2. claude
+ 1. google
+ 2. youtube
 
- p - powrót
- q - wyjście
 
-Wybierz numer appki (p=powrót, q=wyjście):
+ p - powrót 
+ q - wyjście 
+
+ Wybierz numer appki (p=powrót, q=wyjście):
 ```
 
 Po wybraniu:
 
 ```
-=== Szczegóły ===
+ =======================-------- 
+ ===   Szczegóły 
+ ==================== + + v0.9.1 
 
   Nazwa: youtube
   URL: https://youtube.com
@@ -121,12 +126,21 @@ Zmiana języka `pl/en` i domyślnej ścieżki ikon. Zapis w `~/.config/webapp-ge
 Przy pierwszym uruchomieniu:
 
 ```
-Select language / Wybierz język:
+ ╔════════════════════════════════════════╗
+ ║          webapp-gen - FIRST RUN        ║
+ ╚════════════════════════════════════════╝
+
+ Select language / Wybierz język:
   1. Polski
   2. English
 
-Podaj domyślną ścieżkę dla ikon:
-  (ENTER dla domyślnej: /home/user)
+ Choose / Wybierz [1-2]: 1
+
+ Wybrano: Polski
+
+ Podaj domyślną ścieżkę dla ikon:
+  (ENTER dla domyślnej: /home/USER)
+ Ustaw ścieżkę: /home/USER/Obrazy
 ```
 
 ### Skróty CLI
