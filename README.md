@@ -4,6 +4,10 @@ Web app generator for Chromium - create apps from a selected website.
 
 # X11 and Wayland
 
+PL: Webapp-gen działa inaczej w zależności od serwera wyświetlania. Oto, czego możesz się spodziewać:
+                                ///
+EN: Webapp-gen works differently depending on your display server. Here's what to expect:
+
 ## X11:
 
 PL:
@@ -177,7 +181,13 @@ mozna dodac wlasne flagi dodatkowo do cfg:
 ```
 ~/.config/webapp-gen/apps/<nazwa>.cfg
 ```
-
+Przykladowy plik cfg:
+```
+NAZWA="YouTube"
+URL="https://youtube.com/"
+ICON="/home/user/.local/share/icons/webapp-ico/youtube.png"
+FLAGS="--disable-features=Translate,OptimizationGuide --disable-background-networking --force-device-scale-factor=1.5"
+```
 informacje o nich mozna znalesc tu:
 ```
 https://peter.sh/experiments/chromium-command-line-switches/
@@ -310,7 +320,13 @@ You can also add your own flags to the cfg:
 ```
 ~/.config/webapp-gen/apps/<name>.cfg
 ```
-
+Sample cfg file:
+```
+NAZWA="YouTube"
+URL="https://youtube.com/"
+ICON="/home/user/.local/share/icons/webapp-ico/youtube.png"
+FLAGS="--disable-features=Translate,OptimizationGuide --disable-background-networking --force-device-scale-factor=1.5"
+```
 information about them can be found here:
 ```
 https://peter.sh/experiments/chromium-command-line-switches/
