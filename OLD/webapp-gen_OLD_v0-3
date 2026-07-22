@@ -1,0 +1,669 @@
+#!/bin/bash
+# webapp-gen — generator appek webowych (chromium --app)
+
+set -e
+
+USER_HOME="$HOME"
+WRAPPER_DIR="${USER_HOME}/.local/bin/webapp-list"
+DESKTOP_DIR="${USER_HOME}/.local/share/applications"
+ICON_DIR="${USER_HOME}/.local/share/icons/webapp-ico"
+CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
+CONFIG_FILE="${CONFIG_DIR}/config.cfg"
+APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
+
+# --- Funkcje językowe ---
+load_lang() {
+    LANG_CHOICE="pl"
+    DEFAULT_ICON_PATH="${USER_HOME}/Obrazy"
+
+    mkdir -p "$CONFIG_DIR" "$APPS_CONFIG_DIR"
+
+    if [[ -f "$CONFIG_FILE" ]]; then
+        source "$CONFIG_FILE"
+    else
+        first_time_config
+    fi
+}
+
+first_time_config() {
+    echo ""
+    echo "╔════════════════════════════════════════╗"
+    echo "║          webapp-gen - FIRST RUN        ║"
+    echo "╚════════════════════════════════════════╝"
+    echo ""
+    echo "Select language / Wybierz język:"
+    echo "  1. Polski"
+    echo "  2. English"
+    echo ""
+    read -p "Choose / Wybierz [1-2]: " lang_choice
+
+    case "$lang_choice" in
+        2)
+            LANG_CHOICE="en"
+            echo ""
+            echo "Selected: English"
+            ;;
+        *)
+            LANG_CHOICE="pl"
+            echo ""
+            echo "Wybrano: Polski"
+            ;;
+    esac
+
+    echo ""
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        echo "Enter default path for icons:"
+        echo "  (this is where the script will look for icon files)"
+        echo "  (ENTER for default: ${USER_HOME})"
+        read -p "Set path: " icon_path_input
+    else
+        echo "Podaj domyślną ścieżkę dla ikon:"
+        echo "  (tu skrypt będzie szukał plików ikon)"
+        echo "  (ENTER dla domyślnej: ${USER_HOME})"
+        read -p "Ustaw ścieżkę: " icon_path_input
+    fi
+
+    if [[ -n "$icon_path_input" ]]; then
+        DEFAULT_ICON_PATH="$icon_path_input"
+    fi
+
+    # Zapisz config
+    cat > "$CONFIG_FILE" << EOF
+# webapp-gen config
+LANG_CHOICE="$LANG_CHOICE"
+DEFAULT_ICON_PATH="$DEFAULT_ICON_PATH"
+EOF
+
+    echo ""
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        echo "Configuration saved to: $CONFIG_FILE"
+        echo "You can change it later with option 6 in menu."
+    else
+        echo "Konfiguracja zapisana w: $CONFIG_FILE"
+        echo "Możesz ją zmienić później opcją 6 w menu."
+    fi
+    echo ""
+    read -p "Press Enter to continue..."
+}
+
+# Funkcje tekstowe w zależności od języka
+t() {
+    local key="$1"
+    shift
+    VERSION="0.3"
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        case "$key" in
+            "menu_title") echo "=== webapp-gen v$VERSION ===" ;;
+            "menu_install") echo "1. Install new app" ;;
+            "menu_list") echo "2. List installed" ;;
+            "menu_edit") echo "3. Edit app" ;;
+            "menu_config") echo "4. Configuration" ;;
+            "menu_remove") echo "5. Remove app" ;;
+            "menu_exit") echo "6. Exit / Q = Instant" ;;
+            "menu_prompt") echo "Choose option [1-6]: " ;;
+            "menu_invalid") echo "Invalid option!" ;;
+            "goodbye") echo "Goodbye!" ;;
+
+            "install_title") echo "=== Install new webapp ===" ;;
+            "install_name") echo "Name (no spaces): " ;;
+            "install_name_error") echo "Error: Name cannot be empty!" ;;
+            "install_exists") echo "Error: App '%s' already exists!" ;;
+            "install_url") echo "URL: " ;;
+            "install_url_error") echo "Error: URL cannot be empty!" ;;
+            "install_flags_title") echo "Select chromium flags (Y or N):" ;;
+            "install_flags_choice") echo "Flags selected: %s" ;;
+            "install_icon_prompt") echo "Path to icon (ENTER = none):" ;;
+            "install_icon_warning") echo "Warning: File '%s' does not exist. Skipping icon." ;;
+            "install_icon_copied") echo "Icon copied: %s" ;;
+            "install_done") echo "Done: %s" ;;
+
+            "list_title") echo "=== Installed webapps ===" ;;
+            "list_empty") echo "No installed apps." ;;
+
+            "edit_title") echo "=== Edit app ===" ;;
+            "edit_empty") echo "No apps to edit." ;;
+            "edit_prompt") echo "Enter app number to edit: " ;;
+            "edit_invalid") echo "Invalid number!" ;;
+            "edit_info") echo "Editing: %s" ;;
+            "edit_current_url") echo "Current URL: %s" ;;
+            "edit_new_url") echo "New URL (ENTER = keep current): " ;;
+            "edit_current_flags") echo "Current flags: %s" ;;
+            "edit_new_icon") echo "Path to new icon (ENTER = keep current): " ;;
+            "edit_icon_warning") echo "Warning: File '%s' does not exist. Keeping current icon." ;;
+            "edit_icon_updated") echo "Icon updated: %s" ;;
+            "edit_done") echo "Updated: %s" ;;
+
+            "remove_title") echo "=== Remove app ===" ;;
+            "remove_empty") echo "No apps to remove." ;;
+            "remove_prompt") echo "Enter app number to remove: " ;;
+            "remove_invalid") echo "Invalid number!" ;;
+            "remove_confirm") echo "Removing: %s" ;;
+            "remove_done") echo "Removed: %s" ;;
+
+            "config_title") echo "=== Configuration ===" ;;
+            "config_lang") echo "Language (pl/en) [current: %s]: " ;;
+            "config_icon_path") echo "Default icon path [current: %s]: " ;;
+            "config_done") echo "Configuration saved!" ;;
+
+            "bad_number") echo "Bad number!" ;;
+            "menu_prompt") echo "Choose option [1-6] or 'q' to quit: " ;;
+            "press_enter") echo "Press any key to continue... (or 'q' to quit) " ;;
+        esac
+    else
+        # Polski domyślnie
+        case "$key" in
+            "menu_title") echo "=== webapp-gen v$VERSION ===" ;;
+            "menu_install") echo "1. Instaluj nową appkę" ;;
+            "menu_list") echo "2. Lista zainstalowanych" ;;
+            "menu_edit") echo "3. Edytuj appkę" ;;
+            "menu_config") echo "4. Konfiguracja" ;;
+            "menu_remove") echo "5. Usuń appkę" ;;
+            "menu_exit") echo "6. Wyjście / Q = Instant" ;;
+            "menu_prompt") echo "Wybierz opcję [1-6]: " ;;
+            "menu_invalid") echo "Nieprawidłowa opcja!" ;;
+            "goodbye") echo "Do widzenia!" ;;
+
+            "install_title") echo "=== Instalacja nowej appki webowej ===" ;;
+            "install_name") echo "Nazwa (bez spacji): " ;;
+            "install_name_error") echo "Błąd: Nazwa nie może być pusta!" ;;
+            "install_exists") echo "Błąd: Appka '%s' już istnieje!" ;;
+            "install_url") echo "URL: " ;;
+            "install_url_error") echo "Błąd: URL nie może być pusty!" ;;
+            "install_flags_title") echo "Wybierz flagi dla chromium (wpisz Y lub N):" ;;
+            "install_flags_choice") echo "Wybrane flagi: %s" ;;
+            "install_icon_prompt") echo "Podaj ścieżkę do ikony (ENTER = brak):" ;;
+            "install_icon_warning") echo "Ostrzeżenie: Plik '%s' nie istnieje. Pomijam ikonę." ;;
+            "install_icon_copied") echo "Ikona skopiowana: %s" ;;
+            "install_done") echo "Gotowe: %s" ;;
+
+            "list_title") echo "=== Zainstalowane webappki ===" ;;
+            "list_empty") echo "Brak zainstalowanych appek." ;;
+
+            "edit_title") echo "=== Edycja istniejącej appki ===" ;;
+            "edit_empty") echo "Brak appek do edycji." ;;
+            "edit_prompt") echo "Podaj numer appki do edycji: " ;;
+            "edit_invalid") echo "Błędny numer!" ;;
+            "edit_info") echo "Edycja: %s" ;;
+            "edit_current_url") echo "Obecny URL: %s" ;;
+            "edit_new_url") echo "Nowy URL (ENTER = zostaw obecny): " ;;
+            "edit_current_flags") echo "Obecne flagi: %s" ;;
+            "edit_new_icon") echo "Podaj ścieżkę do nowej ikony (ENTER = zostaw obecną): " ;;
+            "edit_icon_warning") echo "Ostrzeżenie: Plik '%s' nie istnieje. Zostawiam obecną ikonę." ;;
+            "edit_icon_updated") echo "Ikona zaktualizowana: %s" ;;
+            "edit_done") echo "Zaktualizowano: %s" ;;
+
+            "remove_title") echo "=== Usuwanie appki ===" ;;
+            "remove_empty") echo "Brak appek do usunięcia." ;;
+            "remove_prompt") echo "Podaj numer appki do usunięcia: " ;;
+            "remove_invalid") echo "Błędny numer!" ;;
+            "remove_confirm") echo "Usuwanie: %s" ;;
+            "remove_done") echo "Usunięto: %s" ;;
+
+            "config_title") echo "=== Konfiguracja ===" ;;
+            "config_lang") echo "Język (pl/en) [obecny: %s]: " ;;
+            "config_icon_path") echo "Domyślna ścieżka do ikon [obecna: %s]: " ;;
+            "config_done") echo "Konfiguracja zapisana!" ;;
+
+            "bad_number") echo "Błędny numer!" ;;
+            "menu_prompt") echo "Wybierz opcję [1-6] lub 'q' aby wyjść: " ;;
+            "press_enter") echo "Wciśnij dowolny klawisz aby kontynuować... (lub 'q' aby wyjść) " ;;
+        esac
+    fi
+}
+
+need_pkexec() {
+    if ! command -v pkexec &>/dev/null; then
+        echo "Brak pkexec (polkit). Zainstaluj: sudo pacman -S polkit"
+        exit 1
+    fi
+}
+
+# Zapisuje wrapper w /usr/local/bin/webapp-list/ i config w ~/.config/webapp-gen/apps/
+write_app_files() {
+    local NAME="$1" URL="$2" ICON_LINE="$3" FLAGS="$4" CUSTOM_FLAGS="$5"
+    local WRAPPER_PATH="${WRAPPER_DIR}/${NAME}-app"
+    local CFG_PATH="${APPS_CONFIG_DIR}/${NAME}.cfg"
+    local DESKTOP_FILE="${DESKTOP_DIR}/${NAME}.desktop"
+
+    mkdir -p "$DESKTOP_DIR" "$ICON_DIR" "$WRAPPER_DIR" "$APPS_CONFIG_DIR"
+
+    # Zawartość configu
+    local CFG_CONTENT
+    CFG_CONTENT=$(cat << EOF
+NAME="${NAME}"
+URL="${URL}"
+ICON="${ICON_LINE}"
+FLAGS="${FLAGS}"
+CUSTOM_FLAGS="${CUSTOM_FLAGS}"
+EOF
+)
+
+    # Zawartość wrappera
+    local WRAPPER_CONTENT
+    WRAPPER_CONTENT=$(cat << EOF
+#!/bin/bash
+source "${CFG_PATH}"
+# fallback dla starych cfg z NAZWA
+NAME="\${NAME:-\$NAZWA}"
+chromium --class="\${NAME}" \${FLAGS} \${CUSTOM_FLAGS} \\
+         --user-data-dir="${USER_HOME}/.config/\${NAME}-app" \\
+         --app="\${URL}"
+EOF
+)
+
+    # Zapisz config
+    echo "$CFG_CONTENT" > "$CFG_PATH"
+
+    # Zapisz wrapper - BEZ pkexec, bo ~/.local
+    echo "$WRAPPER_CONTENT" > "$WRAPPER_PATH"
+    chmod +x "$WRAPPER_PATH"
+
+    # Zapisz .desktop
+    tee "$DESKTOP_FILE" > /dev/null << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=${NAME}
+Comment=${NAME} webapp
+Exec=${WRAPPER_PATH}
+Icon=${ICON_LINE:-applications-internet}
+Categories=Network;GTK;
+Terminal=false
+StartupNotify=true
+StartupWMClass=${NAME}
+EOF
+    chmod +x "$DESKTOP_FILE"
+    update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+
+    echo ""
+    printf "$(t install_done)\n" "$NAME"
+    echo ""
+    echo "  Wrapper:  ${WRAPPER_PATH}"
+    echo "  Config:   ${CFG_PATH}"
+    echo "  Desktop:  ${DESKTOP_FILE}"
+}
+
+ask_flags() {
+    local flags=()
+
+    echo "" >&2
+
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        echo "Select chromium flags (type Y or N):" >&2
+    else
+        echo "Wybierz flagi dla chromium (wpisz Y lub N):" >&2
+    fi
+    echo "" >&2
+
+    # Flaga 1
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable Google Translate and suggestions (--disable-features=Translate,OptimizationGuide) [Y/n]: " answer
+    else
+        read -p "Wyłącz tłumacz i podpowiedzi Google (--disable-features=Translate,OptimizationGuide) [Y/n]: " answer
+    fi
+    if [[ "$answer" =~ ^[Yy]$ ]] || [[ -z "$answer" ]]; then
+        flags+=("--disable-features=Translate,OptimizationGuide")
+    fi
+
+    # Flaga 2
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable unnecessary background networking (--disable-background-networking) [Y/n]: " answer
+    else
+        read -p "Wyłącz zbędny ruch w tle (--disable-background-networking) [Y/n]: " answer
+    fi
+    if [[ "$answer" =~ ^[Yy]$ ]] || [[ -z "$answer" ]]; then
+        flags+=("--disable-background-networking")
+    fi
+
+    # Flaga 3
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable Chromium extensions (--disable-extensions) [y/N]: " answer
+    else
+        read -p "Wyłącz rozszerzenia chromium (--disable-extensions) [y/N]: " answer
+    fi
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--disable-extensions")
+    fi
+
+    # Flaga 4
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable Google account sync (--disable-sync) [y/N]: " answer
+    else
+        read -p "Wyłącz synchronizację kont Google (--disable-sync) [y/N]: " answer
+    fi
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--disable-sync")
+    fi
+
+    # Flaga 5
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Disable GPU hardware acceleration (--disable-gpu) [y/N]: " answer
+    else
+        read -p "Wyłącz akcelerację GPU (--disable-gpu) [y/N]: " answer
+    fi
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--disable-gpu")
+    fi
+
+    # Flaga 6
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Always start in incognito mode (--incognito) [y/N]: " answer
+    else
+        read -p "Tryb incognito za każdym razem (--incognito) [y/N]: " answer
+    fi
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--incognito")
+    fi
+
+    # Flaga 7
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        read -p "Start window maximized (--start-maximized) [y/N]: " answer
+    else
+        read -p "Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " answer
+    fi
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        flags+=("--start-maximized")
+    fi
+
+    echo "${flags[@]}"
+}
+
+get_icon_path() {
+    local prompt="$1"
+    local default_path="$DEFAULT_ICON_PATH"
+
+    echo ""
+    echo "$prompt"
+    echo "   (ENTER = brak, lub podaj nazwę pliku z domyślnego folderu: $default_path)"
+    read -p "> " ICON_INPUT
+
+    if [[ -z "$ICON_INPUT" ]]; then
+        echo ""
+        return 1
+    fi
+
+    if [[ -f "$ICON_INPUT" ]]; then
+        echo "$ICON_INPUT"
+        return 0
+    fi
+
+    if [[ -f "${default_path}/${ICON_INPUT}" ]]; then
+        echo "${default_path}/${ICON_INPUT}"
+        return 0
+    fi
+
+    echo ""
+    return 1
+}
+
+cmd_install() {
+    printf "\n$(t install_title)\n\n"
+    read -p "$(t install_name)" NAME
+    NAME=$(echo "$NAME" | tr -d ' ')
+
+    if [[ ! "$NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "Błąd: tylko litery, cyfry, _ i -"
+        return 1
+    fi
+
+    if [[ -f "${APPS_CONFIG_DIR}/${NAME}.cfg" ]] || [[ -f "${WRAPPER_DIR}/${NAME}-app" ]]; then
+        printf "$(t install_exists)\n" "$NAME"
+        return 1
+    fi
+
+    read -p "$(t install_url)" URL
+    [[ -z "$URL" ]] && echo "$(t install_url_error)" && return 1
+
+    FLAGS=$(ask_flags)
+    printf "\n$(t install_flags_choice)\n" "$FLAGS"
+
+    read -p "Dodatkowe własne flagi [ENTER=brak]: " CUSTOM_FLAGS
+
+    echo ""
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        echo "Enter the name of the icon file from the selected folder."
+    else
+        echo "Podaj nazwe pliku ikony z wybranego folderu."
+    fi
+    read -p "$DEFAULT_ICON_PATH: " ICON_INPUT
+
+    local ICON_LINE=""
+    if [[ -n "$ICON_INPUT" ]]; then
+        mkdir -p "$ICON_DIR"
+        if [[ -f "$ICON_INPUT" ]]; then ICON_PATH="$ICON_INPUT"
+        elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then ICON_PATH="${DEFAULT_ICON_PATH}/${ICON_INPUT}"
+        else ICON_PATH=""; fi
+
+        if [[ -n "$ICON_PATH" && -f "$ICON_PATH" ]]; then
+            local EXT="${ICON_PATH##*.}"
+            local ICON_DEST="${ICON_DIR}/${NAME}.${EXT}"
+            cp "$ICON_PATH" "$ICON_DEST"
+            ICON_LINE="$ICON_DEST"
+            printf "$(t install_icon_copied)\n" "$ICON_LINE"
+        fi
+    fi
+
+    write_app_files "$NAME" "$URL" "$ICON_LINE" "$FLAGS" "$CUSTOM_FLAGS"
+}
+
+cmd_list() {
+    if [[ ! -d "$APPS_CONFIG_DIR" ]] || [[ -z "$(find "$APPS_CONFIG_DIR" -name "*.cfg" 2>/dev/null)" ]]; then
+        echo "$(t list_empty)"
+        return 0
+    fi
+
+    printf "\n$(t list_title)\n\n"
+
+    local i=1
+    for cfg in "$APPS_CONFIG_DIR"/*.cfg; do
+        if [[ -f "$cfg" ]]; then
+            source "$cfg"
+            echo "$i. ${NAZWA}"
+            echo "   URL:   ${URL}"
+            echo "   Flagi: ${FLAGS}"
+            echo "   Wrapper: ${WRAPPER_DIR}/${NAZWA}-app"
+            echo ""
+            ((i++))
+        fi
+    done
+}
+
+cmd_edit() {
+    printf "\n$(t edit_title)\n\n"
+    local apps=()
+    shopt -s nullglob
+    for cfg in "$APPS_CONFIG_DIR"/*.cfg; do
+        # czytamy w subshellu żeby nie zaśmiecać zmiennych
+        local app_name=$(bash -c "source \"$cfg\"; echo \${NAME:-\$NAZWA}")
+        [[ -n "$app_name" ]] && apps+=("$app_name") && echo "${#apps[@]}. $app_name"
+    done
+    shopt -u nullglob
+
+    [[ ${#apps[@]} -eq 0 ]] && echo "$(t edit_empty)" && return 0
+
+    read -p "$(t edit_prompt)" num
+    [[ ! "$num" =~ ^[0-9]+$ ]] || (( num < 1 || num > ${#apps[@]} )) && echo "$(t edit_invalid)" && return 1
+
+    local NAME="${apps[$((num-1))]}"
+    local CFG="${APPS_CONFIG_DIR}/${NAME}.cfg"
+    source "$CFG"
+    NAME="${NAME:-$NAZWA}" # fallback dla starych
+
+    printf "\n$(t edit_info)\n" "$NAME"
+    printf "$(t edit_current_url)\n" "$URL"
+    read -p "$(t edit_new_url)" NEW_URL
+    [[ -z "$NEW_URL" ]] && NEW_URL="$URL"
+
+    printf "$(t edit_current_flags)\n" "$FLAGS"
+    FLAGS=$(ask_flags)
+
+    echo "Obecne custom flagi: $CUSTOM_FLAGS"
+    read -p "Nowe custom flagi [ENTER=zostaw]: " NEW_CUSTOM
+    [[ -n "$NEW_CUSTOM" ]] && CUSTOM_FLAGS="$NEW_CUSTOM"
+
+    echo ""
+    if [[ "$LANG_CHOICE" == "en" ]]; then
+        echo "New icon file (ENTER = keep current, or enter filename from default folder: $DEFAULT_ICON_PATH):"
+    else
+        echo "Nowy plik ikony (ENTER = zostaw obecną, lub podaj nazwę pliku z domyślnego folderu: $DEFAULT_ICON_PATH):"
+    fi
+    read -p "> " ICON_INPUT
+
+    local ICON_LINE="$ICON"
+    if [[ -n "$ICON_INPUT" ]]; then
+        mkdir -p "$ICON_DIR"
+        if [[ -f "$ICON_INPUT" ]]; then ICON_PATH="$ICON_INPUT"
+        elif [[ -f "${DEFAULT_ICON_PATH}/${ICON_INPUT}" ]]; then ICON_PATH="${DEFAULT_ICON_PATH}/${ICON_INPUT}"
+        else ICON_PATH=""; fi
+
+        if [[ -n "$ICON_PATH" && -f "$ICON_PATH" ]]; then
+            local EXT="${ICON_PATH##*.}"
+            local ICON_DEST="${ICON_DIR}/${NAME}.${EXT}"
+            cp "$ICON_PATH" "$ICON_DEST"
+            ICON_LINE="$ICON_DEST"
+            printf "$(t edit_icon_updated)\n" "$ICON_LINE"
+        fi
+    fi
+
+    write_app_files "$NAME" "$NEW_URL" "$ICON_LINE" "$FLAGS" "$CUSTOM_FLAGS"
+}
+
+cmd_remove() {
+    printf "\n$(t remove_title)\n\n"
+
+    local apps=()
+    local i=1
+    for cfg in "$APPS_CONFIG_DIR"/*.cfg; do
+        if [[ -f "$cfg" ]]; then
+            source "$cfg"
+            apps+=("$NAZWA")
+            echo "$i. $NAZWA"
+            ((i++))
+        fi
+    done
+
+    if [[ ${#apps[@]} -eq 0 ]]; then
+        echo "$(t remove_empty)"
+        return 0
+    fi
+
+    echo ""
+    read -p "$(t remove_prompt)" num
+
+    if [[ ! "$num" =~ ^[0-9]+$ ]] || [[ "$num" -lt 1 ]] || [[ "$num" -gt ${#apps[@]} ]]; then
+        echo "$(t remove_invalid)"
+        return 1
+    fi
+
+    local NAZWA="${apps[$((num-1))]}"
+    local WRAPPER_PATH="${WRAPPER_DIR}/${NAZWA}-app"
+    local CFG_PATH="${APPS_CONFIG_DIR}/${NAZWA}.cfg"
+
+    printf "$(t remove_confirm)\n" "$NAZWA"
+
+    # Usuń wrapper (root)
+    if [[ -f "$WRAPPER_PATH" ]]; then
+        need_pkexec
+        pkexec rm -f "$WRAPPER_PATH"
+    fi
+
+    # Usuń config (user)
+    rm -f "$CFG_PATH"
+
+    # Usuń .desktop i ikonę (user)
+    rm -f "${DESKTOP_DIR}/${NAZWA}.desktop"
+    rm -f "${ICON_DIR}/${NAZWA}".*
+    update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+
+    printf "$(t remove_done)\n" "$NAZWA"
+}
+
+cmd_config() {
+    printf "\n$(t config_title)\n\n"
+
+    read -p "$(printf "$(t config_lang)" "$LANG_CHOICE")" new_lang
+    [[ -n "$new_lang" ]] && LANG_CHOICE="$new_lang"
+
+    read -p "$(printf "$(t config_icon_path)" "$DEFAULT_ICON_PATH")" new_path
+    [[ -n "$new_path" ]] && DEFAULT_ICON_PATH="$new_path"
+
+    # Zapisz config
+    cat > "$CONFIG_FILE" << EOF
+# webapp-gen config
+LANG_CHOICE="$LANG_CHOICE"
+DEFAULT_ICON_PATH="$DEFAULT_ICON_PATH"
+EOF
+
+    echo "$(t config_done)"
+}
+
+main_menu() {
+    clear
+    printf "\n$(t menu_title)\n"
+    echo "$(t menu_install)"
+    echo "$(t menu_list)"
+    echo "$(t menu_edit)"
+    echo "$(t menu_config)"
+    echo "$(t menu_remove)"
+    echo "$(t menu_exit)"
+    echo ""
+
+    read -n 1 -p "$(t menu_prompt)" choice
+    echo ""  # Nowa linia po wciśnięciu klawisza
+
+    # Obsługa q w menu
+    if [[ "$choice" == "q" ]] || [[ "$choice" == "Q" ]]; then
+        echo "$(t goodbye)"
+        exit 0
+    fi
+
+    case "$choice" in
+        1) cmd_install ;;
+        2) cmd_list ;;
+        3) cmd_edit ;;
+        4) cmd_config ;;
+        5) cmd_remove ;;
+        6) echo "$(t goodbye)"; exit 0 ;;
+        *)
+            echo "$(t menu_invalid)"
+            sleep 1
+            ;;
+    esac
+}
+
+# --- START ---
+load_lang
+
+case "$1" in
+    -list) cmd_list ;;
+    -remove) cmd_remove ;;
+    -edit) cmd_edit ;;
+    -config) cmd_config ;;
+    -h|--help|help)
+        echo "Użycie:"
+        echo "  webapp-gen              -> interaktywne menu"
+        echo "  webapp-gen -list        -> lista zainstalowanych"
+        echo "  webapp-gen -edit        -> edytuj appkę"
+        echo "  webapp-gen -remove      -> usuń appkę"
+        echo "  webapp-gen -config      -> konfiguracja"
+        ;;
+    "")
+        while true; do
+            main_menu
+            echo ""
+            read -n 1 -p "$(t press_enter)" input
+            echo ""  # Nowa linia po wciśnięciu klawisza
+
+            if [[ "$input" == "q" ]] || [[ "$input" == "Q" ]]; then
+                echo "$(t goodbye)"
+                exit 0
+            fi
+            # Dla Enter lub innych klawiszy - kontynuuj
+        done
+        ;;
+    *)
+        echo "Nieznana opcja: $1"
+        echo "Użyj 'webapp-gen -h' dla pomocy."
+        exit 1
+        ;;
+esac
