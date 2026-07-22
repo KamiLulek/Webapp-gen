@@ -2,6 +2,45 @@
 
 Web app generator for Chromium - create apps from a selected website.
 
+# X11 and Wayland
+
+## X11:
+
+PL:
+```
+- Aplikacja działa jako pełnoprawna, osobna aplikacja w menu systemowym
+- Okno jest bezpośrednio przypisane do launcher'a (skrótu) - ikona na pasku zadań grupuje się z launcher'em
+- W menedżerze zadań widzisz: nazwa-aplikacji-app → chromium
+- Działa płynnie i intuicyjnie jak natywna aplikacja
+```
+EN:
+```
+- App works as a fully-fledged, separate application in the system menu
+- Window is directly linked to the launcher - taskbar icon groups with the launcher
+- In task manager you see: app-name-app → chromium
+- Works smoothly and intuitively like a native application
+```
+
+## Wayland:
+
+PL:
+```
+- Aplikacja uruchamia się poprawnie z własnym profilem i ustawieniami
+- Problem: okno pojawia się jako osobny proces Chromium, a nie jako dedykowana aplikacja
+- W menedżerze zadań widzisz po prostu chromium zamiast nazwa-aplikacji-app
+- Ikona na pasku zadań grupuje się z głównym Chromium (jeśli jest uruchomiony) lub pojawia się jako osobne okno Chromium
+- Launcher (skrót) nie jest bezpośrednio powiązany z uruchomionym oknem - są to dwa oddzielne byty
+```
+EN:
+```
+- App launches correctly with its own profile and settings
+- Problem: window appears as a separate Chromium process, not as a dedicated application
+- In task manager you just see chromium instead of app-name-app
+- Taskbar icon groups with main Chromium (if running) or appears as a separate Chromium window
+- Launcher (shortcut) is not directly linked to the running window - they are two separate entities
+```
+
+
 - [Polski](#polski)
 - [English](#english)
 
