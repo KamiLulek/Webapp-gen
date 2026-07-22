@@ -131,10 +131,11 @@ You can add your own flags in:
 Example:
 
 ```ini
-NAZWA="YouTube"
+NAME="YouTube"
 URL="https://youtube.com/"
 ICON="/home/lula/.local/share/icons/webapp-ico/youtube.png"
 FLAGS="--disable-features=Translate,OptimizationGuide --force-device-scale-factor=1.5 --ozone-platform-hint=auto"
+CUSTOM_FLAGS=""
 ```
 
 Docs:
