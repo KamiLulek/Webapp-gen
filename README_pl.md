@@ -12,6 +12,13 @@ Generator aplikacji webowych dla Chromium - twórz osobne aplikacje z dowolnej s
 
 Tworzy izolowane aplikacje webowe używając `chromium --app`. Każda apka ma własny profil, ikonę, wpis w menu i pokazuje się jako osobne drzewo procesów `nazwa-app → chromium` w btop/htop.
 
+- osobny proces - wrapper `~/.local/bin/webapp-list/app-app`
+- osobne dane - `~/.config/app-app/` (ciasteczka, storage)
+- integracja z pulpitem - `.desktop` + `StartupWMClass`
+- flagi per apka + własne `CUSTOM_FLAGS`
+- bez roota, bez `pkexec`
+- język PL/EN wybierany przy pierwszym uruchomieniu
+
 ## Instalacja
 
 Bez roota, bez `pkexec`.
@@ -27,8 +34,16 @@ chmod +x ~/.local/bin/webapp-gen
 Upewnij się że `~/.local/bin` jest w PATH:
 
 ```bash
+# bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
+
+# zsh
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# fish
+fish_add_path ~/.local/bin
 ```
 
 **Wymagania:**
@@ -40,13 +55,89 @@ source ~/.bashrc
 ```bash
 webapp-gen
 
-=== webapp-gen ===
-1. Instaluj nową appkę
-2. Lista zainstalowanych
-3. Edytuj appkę
-4. Konfiguracja
-5. Usuń appkę
-6. Wyjście
+=== webapp-gen === v0.9-alpha
+
+1. Instalacja
+2. Lista (Info/Edycja/Usuń)
+3. Ustawienia
+4. Wyjście / Q = Wyjście
+
+Wybierz opcję [1-4] lub 'q' aby wyjść:
+```
+
+### 1. Instalacja
+1. `Nazwa (bez spacji)` - tylko `a-zA-Z0-9_-`, np. `youtube`, `claude`
+2. `URL` - np. `https://youtube.com`
+3. Wybór flag Chromium - pytania Y/N
+4. Dodatkowe własne flagi - własne flagi (ENTER = brak)
+5. Ikona - nazwa pliku z domyślnego folderu ikon lub pełna ścieżka. Kopiowana do `~/.local/share/icons/webapp-ico/`
+
+Walidacja: pusta nazwa -> błąd, istniejąca apka -> `Błąd: Appka '%s' już istnieje!`
+
+### 2. Lista (Info/Edycja/Usuń)
+Nowość w 0.9-alpha - wszystko w jednym miejscu.
+
+```
+=== Zainstalowane webappki ===
+
+ 1. youtube
+ 2. claude
+
+ p - powrót
+ q - wyjście
+
+Wybierz numer appki (p=powrót, q=wyjście):
+```
+
+Po wybraniu:
+
+```
+=== Szczegóły ===
+
+  Nazwa: youtube
+  URL: https://youtube.com
+  Ikona: /home/user/.local/share/icons/webapp-ico/youtube.png
+  Wrapper: /home/user/.local/bin/webapp-list/youtube-app
+  Desktop: /home/user/.local/share/applications/youtube.desktop
+  Config: /home/user/.config/webapp-gen/apps/youtube.cfg
+  Flagi: --disable-features=Translate,OptimizationGuide --disable-background-networking
+  Custom: --force-device-scale-factor=1.25
+
+--- Akcje ---
+
+  e - Edytuj
+  r - Usuń
+  p - Powrót do listy
+  q - Wyjście
+```
+
+- `e` - Edytuj: zmiana URL (ENTER = zostaw), ponowny wybór flag, edycja custom flag `ENTER=zostaw / n=nowe / c=usuń`, zmiana ikony.
+- `r` - Usuń z potwierdzeniem `[y/N]`.
+- `p/q` - nawigacja.
+
+### 3. Ustawienia
+Zmiana języka `pl/en` i domyślnej ścieżki ikon. Zapis w `~/.config/webapp-gen/config.cfg`.
+
+Przy pierwszym uruchomieniu:
+
+```
+Select language / Wybierz język:
+  1. Polski
+  2. English
+
+Podaj domyślną ścieżkę dla ikon:
+  (ENTER dla domyślnej: /home/user)
+```
+
+### Skróty CLI
+
+```bash
+webapp-gen              # menu interaktywne 1-4
+webapp-gen -list        # lista + szczegóły e/r/p/q
+webapp-gen -edit        # wybierz apkę do edycji
+webapp-gen -remove      # wybierz apkę do usunięcia
+webapp-gen -config      # konfiguracja
+webapp-gen -h           # pomoc
 ```
 
 ## Gdzie są pliki
@@ -60,32 +151,56 @@ webapp-gen
 | Dane apki | `~/.config/<nazwa>-app/` |
 | Konfiguracja skryptu | `~/.config/webapp-gen/config.cfg` |
 
+Przykład `~/.config/webapp-gen/apps/youtube.cfg`:
+```ini
+NAME="youtube"
+URL="https://youtube.com/"
+ICON="/home/user/.local/share/icons/webapp-ico/youtube.png"
+FLAGS="--disable-features=Translate,OptimizationGuide --disable-background-networking"
+CUSTOM_FLAGS="--force-device-scale-factor=1.5"
+```
+
+Konfiguracja globalna `~/.config/webapp-gen/config.cfg`:
+```ini
+# webapp-gen config
+LANG_CHOICE="pl"
+DEFAULT_ICON_PATH="/home/user/Obrazy"
+```
+
 ## Flagi Chromium
+
+Wybierane podczas instalacji/edycji:
 
 | Flaga | Opis | Domyślnie |
 |---|---|---|
-| `--disable-features=Translate,OptimizationGuide` | Wyłącza tłumacz Google | ✅ |
-| `--disable-background-networking` | Wyłącza ruch w tle | ✅ |
-| `--disable-extensions` | Wyłącza rozszerzenia | ❌ |
-| `--disable-sync` | Wyłącza synchronizację Google | ❌ |
-| `--disable-gpu` | Wyłącza akcelerację GPU | ❌ |
-| `--incognito` | Tryb incognito | ❌ |
-| `--start-maximized` | Start zmaksymalizowany | ❌ |
+| `--disable-features=Translate,OptimizationGuide` | Wyłącza tłumacz Google | ✅ Y |
+| `--disable-background-networking` | Wyłącza ruch w tle | ✅ Y |
+| `--disable-extensions` | Wyłącza rozszerzenia | ❌ N |
+| `--disable-sync` | Wyłącza synchronizację Google | ❌ N |
+| `--disable-gpu` | Wyłącza akcelerację GPU | ❌ N |
+| `--incognito` | Tryb incognito | ❌ N |
+| `--start-maximized` | Start zmaksymalizowany | ❌ N |
 
-Własne flagi możesz dodać w `~/.config/webapp-gen/apps/<nazwa>.cfg`
+`CUSTOM_FLAGS` edytujesz osobno:
+- w menu: `ENTER=zostaw / n=nowe / c=usuń`
+- ręcznie w `.cfg`
+- przydatne: `--force-device-scale-factor=1.25`, `--ozone-platform-hint=auto`
 
 ## Jak to działa - X11 vs Wayland
 
-Wrapper bash `nazwa-app` odpala:
+Wrapper generowany przez `write_app_files()`:
 
 ```bash
-chromium --class="${NAZWA}" --ozone-platform-hint=auto --user-data-dir="$HOME/.config/${NAZWA}-app" --app="${URL}"
+#!/bin/bash
+source "/home/user/.config/webapp-gen/apps/youtube.cfg"
+NAME="${NAME:-$NAZWA}" # kompatybilność ze starą zmienną NAZWA
+chromium --class="${NAME}" ${FLAGS} ${CUSTOM_FLAGS} --user-data-dir="/home/user/.config/${NAME}-app" --app="${URL}"
 ```
 
-Dzięki temu w btopie widzisz `claude-app → chromium` zamiast samego `chromium`.
+Dzięki temu w btopie widzisz `youtube-app → chromium` zamiast samego `chromium`.
 
 - **X11:** grupowanie ikon działa przez `StartupWMClass`
-- **Wayland:** Wayland używa `app_id`, Chromium ustawia je z `--class`, więc `--class=nazwa` + `StartupWMClass=nazwa` + `--ozone-platform-hint=auto` naprawia grupowanie na GNOME/KDE
+- **Wayland:** Wayland używa `app_id`, Chromium ustawia je z `--class`, więc `--class=nazwa` + `StartupWMClass=nazwa` naprawia grupowanie na GNOME/KDE
 
 ## Licencja
 
