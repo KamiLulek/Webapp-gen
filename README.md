@@ -39,10 +39,10 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 
 # zsh
-# echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 
 # fish
-# fish_add_path ~/.local/bin
+fish_add_path ~/.local/bin
 ```
 
 **Requirements:**
