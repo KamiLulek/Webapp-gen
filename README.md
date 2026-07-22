@@ -6,11 +6,13 @@ Web app generator for Chromium - create apps from a selected website.
 
 PL:
 ```
-Webapp-gen działa inaczej w zależności od serwera wyświetlania. Oto, czego możesz się spodziewać:
+Webapp-gen działa inaczej w zależności od serwera wyświetlania.
+ Oto, czego możesz się spodziewać:
 ```
 EN:
 ```
-Webapp-gen works differently depending on your display server. Here's what to expect:
+Webapp-gen works differently depending on your display server.
+ Here's what to expect:
 ```
 
 ## X11:
