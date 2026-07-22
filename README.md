@@ -9,7 +9,7 @@ Web app generator for Chromium - create apps from a selected website.
 PL:
 ```
 - Aplikacja działa jako pełnoprawna, osobna aplikacja w menu systemowym
-- Okno jest bezpośrednio przypisane do launcher'a (skrótu) - ikona na pasku zadań grupuje się z launcher'em
+- Okno jest bezpośrednio przypisane do launcher'a - ikona na pasku zadań grupuje się z launcher'em
 - W menedżerze zadań widzisz: nazwa-aplikacji-app → chromium
 - Działa płynnie i intuicyjnie jak natywna aplikacja
 ```
@@ -28,8 +28,8 @@ PL:
 - Aplikacja uruchamia się poprawnie z własnym profilem i ustawieniami
 - Problem: okno pojawia się jako osobny proces Chromium, a nie jako dedykowana aplikacja
 - W menedżerze zadań widzisz po prostu chromium zamiast nazwa-aplikacji-app
-- Ikona na pasku zadań grupuje się z głównym Chromium lub pojawia się jako osobne okno Chromium
-- Launcher (skrót) nie jest bezpośrednio powiązany z uruchomionym oknem - są to dwa oddzielne byty
+- Ikona na pasku zadań grupuje się z głównym Chromium lub pojawia się jako osobne okno
+- Launcher nie jest bezpośrednio powiązany z uruchomionym oknem - są to dwa oddzielne byty
 ```
 EN:
 ```
