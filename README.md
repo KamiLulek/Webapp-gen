@@ -132,6 +132,22 @@ Flaga	Opis	Domyślnie
                                    ❌ Startuje okno zmaksymalizowane
 ```
 
+# Wlasne flagi
+
+mozna dodac wlasne flagi dodatkowo do cfg:
+```
+~/.config/webapp-gen/apps/<nazwa>.cfg
+```
+
+informacje o nich mozna znalesc tu:
+```
+https://peter.sh/experiments/chromium-command-line-switches/
+
+https://chromium.googlesource.com/chromium/src/+/main/docs/linux/debugging.md
+
+chrome://flags
+```
+
 
 # English
   - [Description](#description)
@@ -248,6 +264,23 @@ Flag	Description	Default
 --start-maximized
                                    ❌ Start window maximizedd
 ```
+
+# Custom flags
+
+You can also add your own flags to the cfg:
+```
+~/.config/webapp-gen/apps/<name>.cfg
+```
+
+information about them can be found here:
+```
+https://peter.sh/experiments/chromium-command-line-switches/
+
+https://chromium.googlesource.com/chromium/src/+/main/docs/linux/debugging.md
+
+chrome://flags
+```
+
 
 License
 MIT License - feel free to use and modify!
