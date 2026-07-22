@@ -3,7 +3,7 @@
 
 set -e
 
-WRAPPER_DIR="/usr/local/bin/webapp-list"
+WRAPPER_DIR="~/.local/bin/webapp-list"
 USER_HOME="${SUDO_USER:+/home/$SUDO_USER}"
 USER_HOME="${USER_HOME:-$HOME}"
 DESKTOP_DIR="${USER_HOME}/.local/share/applications"
