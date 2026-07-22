@@ -32,14 +32,14 @@ Make sure `~/.local/bin` is in your PATH:
 
 ```bash
 # check
-echo $PATH | grep -q "$HOME/.local/bin" && echo "OK" || echo "Add to PATH"
+echo $PATH | grep -q "$.local/bin" && echo "OK" || echo "Add to PATH"
 
 # if not, add (bash)
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+echo 'export PATH="$.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 
 # zsh
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+echo 'export PATH="$.local/bin:$PATH"' >> ~/.zshrc
 
 # fish
 fish_add_path ~/.local/bin
@@ -92,7 +92,7 @@ Example:
 ```ini
 # webapp-gen config
 LANG_CHOICE="en"
-DEFAULT_ICON_PATH="/home/lula/Pictures"
+DEFAULT_ICON_PATH="~/Pictures"
 ```
 
 ## Where files are stored
@@ -133,7 +133,7 @@ Example:
 ```ini
 NAME="YouTube"
 URL="https://youtube.com/"
-ICON="/home/lula/.local/share/icons/webapp-ico/youtube.png"
+ICON="${USER_HOME}/.local/share/icons/webapp-ico/youtube.png"
 FLAGS="--disable-features=Translate,OptimizationGuide --force-device-scale-factor=1.5 --ozone-platform-hint=auto"
 CUSTOM_FLAGS=""
 ```
@@ -150,7 +150,7 @@ Each app is a bash wrapper:
 ```bash
 #!/bin/bash
 source ~/.config/webapp-gen/apps/claude.cfg
-chromium --class="${NAZWA}" --ozone-platform-hint=auto ${FLAGS} --user-data-dir="$HOME/.config/${NAZWA}-app" --app="${URL}"
+chromium --class="${NAZWA}" --ozone-platform-hint=auto ${FLAGS} --user-data-dir="$.config/${NAZWA}-app" --app="${URL}"
 ```
 
 - The bash process `claude-app` stays as parent, so in `btop`/`htop` you see `claude-app → chromium` instead of just `chromium`. This makes it easy to identify apps.
