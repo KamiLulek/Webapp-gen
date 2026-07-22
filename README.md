@@ -129,6 +129,14 @@ On first run:
  Select language / Wybierz język:
   1. Polski
   2. English
+
+ Choose / Wybierz [1-2]: 2
+
+ Selected: English
+
+ Enter default path for icons:
+  (ENTER for default: /home/USER)
+ Set path: /home/USER/Pictures
 ```
 
 ### CLI shortcuts
