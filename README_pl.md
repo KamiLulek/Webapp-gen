@@ -126,9 +126,9 @@ Zmiana języka `pl/en` i domyślnej ścieżki ikon. Zapis w `~/.config/webapp-ge
 Przy pierwszym uruchomieniu:
 
 ```
- ╔════════════════════════════════════════╗
- ║          webapp-gen - FIRST RUN        ║
- ╚════════════════════════════════════════╝
+ =======================-------- 
+ ===   webapp-gen - FIRST RUN 
+ ==================== + + v0.9.9 
 
  Select language / Wybierz język:
   1. Polski
