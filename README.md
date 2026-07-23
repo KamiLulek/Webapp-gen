@@ -142,12 +142,17 @@ On first run:
 ### CLI shortcuts
 
 ```bash
-webapp-gen              # interactive menu 1-4
-webapp-gen -list        # list + details view e/r/p/q
-webapp-gen -edit        # pick app to edit
-webapp-gen -remove      # pick app to remove
-webapp-gen -config      # settings
-webapp-gen -h           # help
+  Usage: 
+  webapp-gen                  ->  Interactive menu (1-4) 
+  webapp-gen -list            ->  List + details e/r/p/q 
+  webapp-gen -edit            ->  Edit app 
+  webapp-gen -remove          ->  Delete app 
+  webapp-gen -name-i nazwa    ->  App info by name 
+  webapp-gen -name-e nazwa    ->  Edit app by name 
+  webapp-gen -name-r nazwa    ->  Delete app by name 
+  webapp-gen -config          ->  Configuration 
+
+  VERSION:                    -> v0.9.8 
 ```
 
 ## Where files are stored
