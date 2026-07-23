@@ -13,8 +13,8 @@ init_globals() {
     CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
     CONFIG_FILE="${CONFIG_DIR}/config.cfg"
     APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
-    VERSION="v0.9.1"
-    VERSION_PLUS="+ + v0.9.1"
+    VERSION="v0.9.3"
+    VERSION_PLUS="+ + v0.9.3"
 }
 
 # ----------------
@@ -59,23 +59,13 @@ first_time_config() {
         *) LANG_CHOICE="pl"; echo ""; echo " Wybrano: Polski" ;;
     esac
     echo ""
-    if [[ "$LANG_CHOICE" == "en" ]]; then
-        echo " Enter default path for icons:"
-        echo "  (ENTER for default: ${USER_HOME})"
-        read -p " Set path: " icon_path_input
-    else
-        echo " Podaj domyślną ścieżkę dla ikon:"
-        echo "  (ENTER dla domyślnej: ${USER_HOME})"
-        read -p " Ustaw ścieżkę: " icon_path_input
-    fi
+    echo "$(t first_run_icon_path_prompt)"
+    printf "$(t first_run_icon_path_hint)\n" "$USER_HOME"
+    read -p "$(t first_run_icon_path_set)" icon_path_input
     [[ -n "$icon_path_input" ]] && DEFAULT_ICON_PATH="$icon_path_input"
     save_config
     echo ""
-    if [[ "$LANG_CHOICE" == "en" ]]; then
-        echo " Configuration saved to: $CONFIG_FILE"
-    else
-        echo " Konfiguracja zapisana w: $CONFIG_FILE"
-    fi
+    printf "$(t first_run_config_saved)\n" "$CONFIG_FILE"
     echo ""
     read -p " Press Enter to continue..."
 }
@@ -157,7 +147,24 @@ t() {
             "key_p_q") echo " p - back / q - quit" ;;
             "key_p") echo " p - back " ;;
             "key_q") echo " q - quit " ;;
+            "choice_Y") echo " [Y/n]: " ;;
+            "choice_N") echo " [y/N]: " ;;
             "press_enter") echo " Press any key to continue... (or 'q' to quit) " ;;
+            "first_run_icon_path_prompt") echo " Enter default path for icons:" ;;
+            "first_run_icon_path_hint") echo "  (ENTER for default: %s)" ;;
+            "first_run_icon_path_set") echo " Set path: " ;;
+            "first_run_config_saved") echo " Configuration saved to: %s" ;;
+            "edit_new_icon") echo " New icon file (ENTER = keep current):" ;;
+            "install_icon_prompt") echo " Enter icon filename from folder." ;;
+            "flag_translate") echo " Disable Google Translate (--disable-features=Translate,OptimizationGuide) [Y/n]: " ;;
+            "flag_bg_net") echo " Disable background networking (--disable-background-networking) [Y/n]: " ;;
+            "flag_extensions") echo " Disable extensions (--disable-extensions) [y/N]: " ;;
+            "flag_sync") echo " Disable sync (--disable-sync) [y/N]: " ;;
+            "flag_gpu") echo " Disable GPU (--disable-gpu) [y/N]: " ;;
+            "flag_incognito") echo " Incognito (--incognito) [y/N]: " ;;
+            "flag_maximized") echo " Maximized (--start-maximized) [y/N]: " ;;
+            "install_name_invalid") echo " Error: only letters, digits, _ and -" ;;
+            "install_custom_flags") echo " Additional custom flags [ENTER=none]: " ;;
         esac
     else
         case "$key" in
@@ -221,6 +228,21 @@ t() {
             "key_p") echo " p - powrót " ;;
             "key_q") echo " q - wyjście " ;;
             "press_enter") echo " Wciśnij dowolny klawisz aby kontynuować... (lub 'q' aby wyjść) " ;;
+            "first_run_icon_path_prompt") echo " Podaj domyślną ścieżkę dla ikon:" ;;
+            "first_run_icon_path_hint") echo "  (ENTER dla domyślnej: %s)" ;;
+            "first_run_icon_path_set") echo " Ustaw ścieżkę: " ;;
+            "first_run_config_saved") echo " Konfiguracja zapisana w: %s" ;;
+            "edit_new_icon") echo " Nowy plik ikony (ENTER = zostaw obecną):" ;;
+            "install_icon_prompt") echo " Podaj nazwe pliku ikony z wybranego folderu." ;;
+            "flag_translate") echo " Wyłącz tłumacz Google (--disable-features=Translate,OptimizationGuide) [Y/n]: " ;;
+            "flag_bg_net") echo " Wyłącz ruch w tle (--disable-background-networking) [Y/n]: " ;;
+            "flag_extensions") echo " Wyłącz rozszerzenia (--disable-extensions) [y/N]: " ;;
+            "flag_sync") echo " Wyłącz synchronizację kont Google (--disable-sync) [y/N]: " ;;
+            "flag_gpu") echo " Wyłącz akcelerację GPU (--disable-gpu) [y/N]: " ;;
+            "flag_incognito") echo " Tryb incognito (--incognito) [y/N]: " ;;
+            "flag_maximized") echo " Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " ;;
+            "install_name_invalid") echo " Błąd: tylko litery, cyfry, _ i -" ;;
+            "install_custom_flags") echo " Dodatkowe własne flagi [ENTER=brak]: " ;;
         esac
     fi
 }
@@ -239,13 +261,10 @@ need_pkexec() {
 #          Pyta o pojedynczą flagę chromium (helper)
 # -----------------
 ask_single_flag() {
-    local prompt_en="$1"
-    local prompt_pl="$2"
-    local default_yes="$3"
-    local prompt_text
-    if [[ "$LANG_CHOICE" == "en" ]]; then prompt_text="$prompt_en"; else prompt_text="$prompt_pl"; fi
+    local key="$1"
+    local default_yes="$2"
     local answer
-    read -p "$prompt_text" answer
+    read -p "$(t "$key")" answer
     if [[ "$default_yes" == "yes" ]]; then
         [[ "$answer" =~ ^[Yy]$ ]] || [[ -z "$answer" ]]
     else
@@ -261,13 +280,13 @@ ask_flags() {
     echo "" >&2
     echo "$(t install_flags_title)" >&2
     echo "" >&2
-    ask_single_flag " Disable Google Translate (--disable-features=Translate,OptimizationGuide) [Y/n]: " " Wyłącz tłumacz Google (--disable-features=Translate,OptimizationGuide) [Y/n]: " "yes" && flags+=("--disable-features=Translate,OptimizationGuide")
-    ask_single_flag " Disable background networking (--disable-background-networking) [Y/n]: " " Wyłącz ruch w tle (--disable-background-networking) [Y/n]: " "yes" && flags+=("--disable-background-networking")
-    ask_single_flag " Disable extensions (--disable-extensions) [y/N]: " " Wyłącz rozszerzenia (--disable-extensions) [y/N]: " "no" && flags+=("--disable-extensions")
-    ask_single_flag " Disable sync (--disable-sync) [y/N]: " " Wyłącz synchronizację kont Google (--disable-sync) [y/N]: " "no" && flags+=("--disable-sync")
-    ask_single_flag " Disable GPU (--disable-gpu) [y/N]: " " Wyłącz akcelerację GPU (--disable-gpu) [y/N]: " "no" && flags+=("--disable-gpu")
-    ask_single_flag " Incognito (--incognito) [y/N]: " " Tryb incognito (--incognito) [y/N]: " "no" && flags+=("--incognito")
-    ask_single_flag " Maximized (--start-maximized) [y/N]: " " Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " "no" && flags+=("--start-maximized")
+    ask_single_flag "flag_translate" "yes" && flags+=("--disable-features=Translate,OptimizationGuide")
+    ask_single_flag "flag_bg_net" "yes" && flags+=("--disable-background-networking")
+    ask_single_flag "flag_extensions" "no" && flags+=("--disable-extensions")
+    ask_single_flag "flag_sync" "no" && flags+=("--disable-sync")
+    ask_single_flag "flag_gpu" "no" && flags+=("--disable-gpu")
+    ask_single_flag "flag_incognito" "no" && flags+=("--incognito")
+    ask_single_flag "flag_maximized" "no" && flags+=("--start-maximized")
     echo "${flags[@]}"
 }
 
@@ -447,15 +466,10 @@ edit_app_direct() {
     local NEW_FLAGS
     NEW_FLAGS=$(ask_flags)
 
-    # NOWA LOGIKA: ENTER=zostaw / n=nowe / c=usuń
     local NEW_CUSTOM
     NEW_CUSTOM=$(handle_custom_flags_edit "$CUSTOM_FLAGS")
 
-    if [[ "$LANG_CHOICE" == "en" ]]; then
-        echo " New icon file (ENTER = keep current):"
-    else
-        echo " Nowy plik ikony (ENTER = zostaw obecną):"
-    fi
+    echo "$(t edit_new_icon)"
     local ICON_INPUT ICON_PATH
     read -p " > " ICON_INPUT
 
@@ -495,15 +509,15 @@ cmd_install() {
     read -p "$(t install_name)" NAME
     NAME=$(echo "$NAME" | tr -d ' ')
     if [[ -z "$NAME" ]]; then echo "$(t install_name_error)"; return 1; fi
-    if [[ ! "$NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then echo " Błąd: tylko litery, cyfry, _ i -"; return 1; fi
+    if [[ ! "$NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then echo "$(t install_name_invalid)"; return 1; fi
     if [[ -f "${APPS_CONFIG_DIR}/${NAME}.cfg" ]] || [[ -f "${WRAPPER_DIR}/${NAME}-app" ]]; then printf "$(t install_exists)\n" "$NAME"; return 1; fi
     read -p "$(t install_url)" URL
     if [[ -z "$URL" ]]; then echo "$(t install_url_error)"; return 1; fi
     FLAGS=$(ask_flags)
     printf "\n$(t install_flags_choice)\n" "$FLAGS"
-    read -p " Dodatkowe własne flagi [ENTER=brak]: " CUSTOM_FLAGS
+    read -p "$(t install_custom_flags)" CUSTOM_FLAGS
     echo ""
-    if [[ "$LANG_CHOICE" == "en" ]]; then echo " Enter icon filename from folder."; else echo " Podaj nazwe pliku ikony z wybranego folderu."; fi
+    echo "$(t install_icon_prompt)"
     read -p "$DEFAULT_ICON_PATH: " ICON_INPUT
     ICON_LINE=""
     if ICON_PATH=$(resolve_icon_path "$ICON_INPUT" "$DEFAULT_ICON_PATH"); then
