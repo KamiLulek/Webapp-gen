@@ -21,29 +21,12 @@ Tworzy izolowane aplikacje webowe używając `chromium --app`. Każda apka ma w�
 
 ## Instalacja
 
-Bez roota, bez `pkexec`.
-
 ```bash
-git clone https://github.com/KamiLulek/webapp-gen
-cd webapp-gen
-mkdir -p ~/.local/bin/webapp-list
-cp webapp-gen ~/.local/bin/
-chmod +x ~/.local/bin/webapp-gen
+curl -fsSL https://raw.githubusercontent.com/KamiLulek/Webapp-gen/main/install.sh | bash
 ```
-
-Upewnij się że `~/.local/bin` jest w PATH:
-
+# Update
 ```bash
-# bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-
-# zsh
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-
-# fish
-fish_add_path ~/.local/bin
+webapp-gen -update
 ```
 
 **Wymagania:**
