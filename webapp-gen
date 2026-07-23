@@ -13,8 +13,8 @@ init_globals() {
     CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
     CONFIG_FILE="${CONFIG_DIR}/config.cfg"
     APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
-    VERSION="v0.9.3"
-    VERSION_PLUS="+ + v0.9.3"
+    VERSION="v0.9.8"
+    VERSION_PLUS="+ + ${VERSION}"
 }
 
 # ----------------
@@ -110,6 +110,7 @@ t() {
             "install_icon_copied") echo " Icon copied: %s" ;;
             "install_done") echo " Done: %s" ;;
             "list_title") echo " ===   Installed " ;;
+            "list_title_cli") echo " ===   List " ;;
             "list_empty") echo " No installed apps." ;;
             "list_select_prompt") echo " Select app number (p=back, q=quit): " ;;
             "detail_title") echo " ===   Details " ;;
@@ -147,8 +148,6 @@ t() {
             "key_p_q") echo " p - back / q - quit" ;;
             "key_p") echo " p - back " ;;
             "key_q") echo " q - quit " ;;
-            "choice_Y") echo " [Y/n]: " ;;
-            "choice_N") echo " [y/N]: " ;;
             "press_enter") echo " Press any key to continue... (or 'q' to quit) " ;;
             "first_run_icon_path_prompt") echo " Enter default path for icons:" ;;
             "first_run_icon_path_hint") echo "  (ENTER for default: %s)" ;;
@@ -165,6 +164,19 @@ t() {
             "flag_maximized") echo " Maximized (--start-maximized) [y/N]: " ;;
             "install_name_invalid") echo " Error: only letters, digits, _ and -" ;;
             "install_custom_flags") echo " Additional custom flags [ENTER=none]: " ;;
+            "install_retry_prompt") echo " [ENTER] retry / p = back / q = quit: " ;;
+            "cli_app_not_found") echo " Error: app '%s' not found!" ;;
+            "wag-usage") echo " Usage: " ;;
+            "wag-h") echo " Interactive menu (1-4) " ;;
+            "wag-h-list") echo " List + details e/r/p/q " ;;
+            "wag-h-edit") echo " Edit app " ;;
+            "wag-h-remove") echo " Delete app " ;;
+            "wag-h-name-i") echo " App info by name " ;;
+            "wag-h-name-e") echo " Edit app by name " ;;
+            "wag-h-name-r") echo " Delete app by name " ;;
+            "wag-h-c") echo " Configuration " ;;
+            "help-unknow") echo " Unknown option: " ;;
+            "help-info") echo " Use 'webapp-gen -h' for help. " ;;
         esac
     else
         case "$key" in
@@ -190,6 +202,7 @@ t() {
             "install_icon_copied") echo " Ikona skopiowana: %s" ;;
             "install_done") echo " Gotowe: %s" ;;
             "list_title") echo " ===   Zainstalowane " ;;
+            "list_title_cli") echo " ===   Lista " ;;
             "list_empty") echo " Brak zainstalowanych appek." ;;
             "list_select_prompt") echo " Wybierz numer appki (p=powrót, q=wyjście): " ;;
             "detail_title") echo " ===   Szczegóły " ;;
@@ -243,6 +256,19 @@ t() {
             "flag_maximized") echo " Startuj zmaksymalizowane okno (--start-maximized) [y/N]: " ;;
             "install_name_invalid") echo " Błąd: tylko litery, cyfry, _ i -" ;;
             "install_custom_flags") echo " Dodatkowe własne flagi [ENTER=brak]: " ;;
+            "install_retry_prompt") echo " [ENTER] ponów / p = powrót / q = wyjście: " ;;
+            "cli_app_not_found") echo " Błąd: appka '%s' nie istnieje!" ;;
+            "wag-usage") echo " Użycie: " ;;
+            "wag-h") echo " interaktywne menu (1-4) " ;;
+            "wag-h-list") echo " lista + szczegóły e/r/p/q " ;;
+            "wag-h-edit") echo " edytuj appkę " ;;
+            "wag-h-remove") echo " usuń appkę " ;;
+            "wag-h-name-i") echo " info o appce po nazwie " ;;
+            "wag-h-name-e") echo " edytuj appkę po nazwie " ;;
+            "wag-h-name-r") echo " usuń appkę po nazwie " ;;
+            "wag-h-c") echo " konfiguracja " ;;
+            "help-unknow") echo " Nieznana opcja: " ;;
+            "help-info") echo " Użyj 'webapp-gen -h' dla pomocy. " ;;
         esac
     fi
 }
@@ -417,7 +443,7 @@ get_app_name_by_index() {
 # ----------------
 #          Wyświetla szczegółowe info o jednej appce
 # -----------------
-show_app_details() {
+show_app_info() {
     local NAME="$1"
     local CFG_PATH="${APPS_CONFIG_DIR}/${NAME}.cfg"
     # shellcheck source=/dev/null
@@ -437,6 +463,11 @@ show_app_details() {
     printf "$(t detail_config)\n" "$CFG_PATH"
     printf "$(t detail_flags)\n" "$FLAGS"
     printf "$(t detail_custom)\n" "${CUSTOM_FLAGS:info_none}"
+}
+
+show_app_details() {
+    local NAME="$1"
+    show_app_info "$NAME"
     echo ""
     echo "$(t detail_options)"
     echo ""
@@ -466,6 +497,7 @@ edit_app_direct() {
     local NEW_FLAGS
     NEW_FLAGS=$(ask_flags)
 
+    # NOWA LOGIKA: ENTER=zostaw / n=nowe / c=usuń
     local NEW_CUSTOM
     NEW_CUSTOM=$(handle_custom_flags_edit "$CUSTOM_FLAGS")
 
@@ -506,13 +538,31 @@ cmd_install() {
     printf "\n$(t install_title)"
     printf "\n$(t separator_down)\n\n"
     local NAME URL FLAGS CUSTOM_FLAGS ICON_INPUT ICON_PATH ICON_LINE
-    read -p "$(t install_name)" NAME
-    NAME=$(echo "$NAME" | tr -d ' ')
-    if [[ -z "$NAME" ]]; then echo "$(t install_name_error)"; return 1; fi
-    if [[ ! "$NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then echo "$(t install_name_invalid)"; return 1; fi
-    if [[ -f "${APPS_CONFIG_DIR}/${NAME}.cfg" ]] || [[ -f "${WRAPPER_DIR}/${NAME}-app" ]]; then printf "$(t install_exists)\n" "$NAME"; return 1; fi
+
+    while true; do
+        read -p "$(t install_name)" NAME
+        NAME=$(echo "$NAME" | tr -d ' ')
+        if [[ -z "$NAME" ]]; then
+            echo "$(t install_name_error)"
+        elif [[ ! "$NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+            echo "$(t install_name_invalid)"
+        elif [[ -f "${APPS_CONFIG_DIR}/${NAME}.cfg" ]] || [[ -f "${WRAPPER_DIR}/${NAME}-app" ]]; then
+            printf "$(t install_exists)\n" "$NAME"
+        else
+            break
+        fi
+        local retry_choice
+        read -n 1 -p "$(t install_retry_prompt)" retry_choice
+        echo ""
+        case "$retry_choice" in
+            p|P) return 0 ;;
+            q|Q) echo "$(t goodbye)"; exit 0 ;;
+            *) : ;;
+        esac
+    done
+
     read -p "$(t install_url)" URL
-    if [[ -z "$URL" ]]; then echo "$(t install_url_error)"; return 1; fi
+    if [[ -z "$URL" ]]; then echo "$(t install_url_error)"; return 0; fi
     FLAGS=$(ask_flags)
     printf "\n$(t install_flags_choice)\n" "$FLAGS"
     read -p "$(t install_custom_flags)" CUSTOM_FLAGS
@@ -615,6 +665,27 @@ cmd_list() {
 }
 
 # ----------------
+#          Wersja CLI: sama lista bez okna wyboru
+# -----------------
+cmd_list_plain() {
+    get_all_apps
+    if [[ ${#APPS[@]} -eq 0 ]]; then
+        echo ""
+        echo "$(t list_empty)"
+        return 0
+    fi
+    printf "\n$(t separator_up)"
+    printf "\n$(t list_title_cli)"
+    printf "\n$(t separator_down)\n\n"
+    local i=1
+    for app_name in "${APPS[@]}"; do
+        echo " $i. $app_name"
+        ((i++))
+    done
+    echo ""
+}
+
+# ----------------
 #          Edytuje globalną konfigurację - język i ścieżkę ikon
 # -----------------
 cmd_config() {
@@ -682,7 +753,7 @@ main_loop() {
 # -----------------
 handle_cli_args() {
     case "$1" in
-        -list) cmd_list ;;
+        -list) cmd_list_plain ;;
         -remove)
             get_all_apps
             [[ ${#APPS[@]} -eq 0 ]] && echo "$(t list_empty)" && return
@@ -696,7 +767,7 @@ handle_cli_args() {
         -edit)
             get_all_apps
             [[ ${#APPS[@]} -eq 0 ]] && echo "$(t list_empty)" && return
-            for i in "${!APPS[@]}"; do echo " $((i+1)). ${APPS[$i]}"; done
+            for i in "${!APPS[@]}"; do echo ""; echo " $((i+1)). ${APPS[$i]}"; done
             read -p "$(t list_select_prompt)" sel
             if [[ "$sel" =~ ^[0-9]+$ ]]; then
                 local n; n=$(get_app_name_by_index "$sel")
@@ -704,16 +775,48 @@ handle_cli_args() {
             fi
             ;;
         -config) cmd_config ;;
+        -name-i)
+            local n="$2"
+            if [[ -z "$n" ]] || [[ ! -f "${APPS_CONFIG_DIR}/${n}.cfg" ]]; then
+                printf "$(t cli_app_not_found)\n" "$n"
+                return 1
+            fi
+            show_app_info "$n"
+            ;;
+        -name-e)
+            local n="$2"
+            if [[ -z "$n" ]] || [[ ! -f "${APPS_CONFIG_DIR}/${n}.cfg" ]]; then
+                printf "$(t cli_app_not_found)\n" "$n"
+                return 1
+            fi
+            show_app_info "$n"
+            edit_app_direct "$n"
+            ;;
+        -name-r)
+            local n="$2"
+            if [[ -z "$n" ]] || [[ ! -f "${APPS_CONFIG_DIR}/${n}.cfg" ]]; then
+                printf "$(t cli_app_not_found)\n" "$n"
+                return 1
+            fi
+            remove_app_direct "$n"
+            ;;
         -h|--help|help)
-            echo "Użycie:"
-            echo "  webapp-gen              -> interaktywne menu (1-4)"
-            echo "  webapp-gen -list        -> lista + szczegóły e/r/p/q"
-            echo "  webapp-gen -edit        -> edytuj appkę"
-            echo "  webapp-gen -remove      -> usuń appkę"
-            echo "  webapp-gen -config      -> konfiguracja"
+            echo ""
+            echo " $(t wag-usage)"
+            echo "  webapp-gen                  ->" "$(t wag-h)"
+            echo "  webapp-gen -list            ->" "$(t wag-h-list)"
+            echo "  webapp-gen -edit            ->" "$(t wag-h-edit)"
+            echo "  webapp-gen -remove          ->" "$(t wag-h-remove)"
+            echo "  webapp-gen -name-i nazwa    ->" "$(t wag-h-name-i)"
+            echo "  webapp-gen -name-e nazwa    ->" "$(t wag-h-name-e)"
+            echo "  webapp-gen -name-r nazwa    ->" "$(t wag-h-name-r)"
+            echo "  webapp-gen -config          ->" "$(t wag-h-c)"
+            echo ""
+            echo "  VERSION:                    ->" "$(t version_title)"
+            echo ""
             ;;
         "") main_loop ;;
-        *) echo " Nieznana opcja: $1"; echo " Użyj 'webapp-gen -h' dla pomocy."; exit 1 ;;
+        *) echo " $(t help-unknow) $1"; echo " $(t help-info) "; exit 1 ;;
     esac
 }
 
