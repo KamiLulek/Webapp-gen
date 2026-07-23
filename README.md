@@ -151,6 +151,7 @@ On first run:
   webapp-gen -name-e nazwa    ->  Edit app by name 
   webapp-gen -name-r nazwa    ->  Delete app by name 
   webapp-gen -config          ->  Configuration 
+  webapp-gen -h/--help/help   ->  Help menu
 
   VERSION:                    -> v0.9.8 
 ```
