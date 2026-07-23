@@ -13,8 +13,8 @@ init_globals() {
     CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
     CONFIG_FILE="${CONFIG_DIR}/config.cfg"
     APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
-    VERSION="v0.9.9"
-    VERSION_PLUS="+ + ${VERSION}"
+    VERSION="v1.0"
+    VERSION_PLUS="+ + + ${VERSION}"
 }
 
 # ----------------
@@ -45,9 +45,9 @@ load_lang() {
 first_time_config() {
     clear
     echo ""
-    echo " ╔════════════════════════════════════════╗"
-    echo " ║          webapp-gen - FIRST RUN        ║"
-    echo " ╚════════════════════════════════════════╝"
+    printf "\n$(t separator_up)"
+    printf "\n$(t menu_title)""- FIRST RUN "
+    printf "\n$(t separator_down)\n\n"
     echo ""
     echo " Select language / Wybierz język:"
     echo "  1. Polski"
@@ -112,7 +112,7 @@ t() {
             "list_title") echo " ===   Installed " ;;
             "list_title_cli") echo " ===   List " ;;
             "list_empty") echo " No installed apps." ;;
-            "list_select_prompt") echo " Select app number (p=back, q=quit): " ;;
+            "list_select_prompt") echo " Select [1-99/p/q]: " ;;
             "detail_title") echo " ===   Details " ;;
             "detail_name") echo "  Name: %s" ;;
             "detail_url") echo "  URL: %s" ;;
@@ -122,7 +122,7 @@ t() {
             "detail_wrapper") echo "  Wrapper: %s" ;;
             "detail_desktop") echo "  Desktop: %s" ;;
             "detail_config") echo "  Config: %s" ;;
-            "detail_options") echo " --- Actions ---" ;;
+            "detail_options") echo " --- Options ---" ;;
             "detail_opt_edit") echo "  e - Edit" ;;
             "detail_opt_remove") echo "  r - Remove" ;;
             "detail_opt_back") echo "  p - Back to list" ;;
@@ -204,7 +204,7 @@ t() {
             "list_title") echo " ===   Zainstalowane " ;;
             "list_title_cli") echo " ===   Lista " ;;
             "list_empty") echo " Brak zainstalowanych appek." ;;
-            "list_select_prompt") echo " Wybierz numer appki (p=powrót, q=wyjście): " ;;
+            "list_select_prompt") echo " Wybierz [1-99/p/q]: " ;;
             "detail_title") echo " ===   Szczegóły " ;;
             "detail_name") echo "  Nazwa: %s" ;;
             "detail_url") echo "  URL: %s" ;;
@@ -214,7 +214,7 @@ t() {
             "detail_wrapper") echo "  Wrapper: %s" ;;
             "detail_desktop") echo "  Desktop: %s" ;;
             "detail_config") echo "  Config: %s" ;;
-            "detail_options") echo " --- Akcje ---" ;;
+            "detail_options") echo " --- Opcje ---" ;;
             "detail_opt_edit") echo "  e - Edytuj" ;;
             "detail_opt_remove") echo "  r - Usuń" ;;
             "detail_opt_back") echo "  p - Powrót do listy" ;;
@@ -463,6 +463,7 @@ show_app_info() {
     printf "$(t detail_config)\n" "$CFG_PATH"
     printf "$(t detail_flags)\n" "$FLAGS"
     printf "$(t detail_custom)\n" "${CUSTOM_FLAGS:info_none}"
+    echo ""
 }
 
 show_app_details() {
@@ -600,7 +601,8 @@ cmd_list() {
             ((i++))
         done
         echo ""
-        printf "\n$(t key_p)"
+        echo " ___________________ "
+        printf "$(t key_p)"
         printf "\n$(t key_q)\n"
         echo ""
 
@@ -775,7 +777,7 @@ handle_cli_args() {
             fi
             ;;
         -config) cmd_config ;;
-        -name-i)
+        -info)
             local n="$2"
             if [[ -z "$n" ]] || [[ ! -f "${APPS_CONFIG_DIR}/${n}.cfg" ]]; then
                 printf "$(t cli_app_not_found)\n" "$n"
@@ -807,9 +809,9 @@ handle_cli_args() {
             echo "  webapp-gen -list            ->" "$(t wag-h-list)"
             echo "  webapp-gen -edit            ->" "$(t wag-h-edit)"
             echo "  webapp-gen -remove          ->" "$(t wag-h-remove)"
-            echo "  webapp-gen -name-i nazwa    ->" "$(t wag-h-name-i)"
-            echo "  webapp-gen -name-e nazwa    ->" "$(t wag-h-name-e)"
-            echo "  webapp-gen -name-r nazwa    ->" "$(t wag-h-name-r)"
+            echo "  webapp-gen -info name       ->" "$(t wag-h-name-i)"
+            echo "  webapp-gen -name-e name     ->" "$(t wag-h-name-e)"
+            echo "  webapp-gen -name-r name     ->" "$(t wag-h-name-r)"
             echo "  webapp-gen -config          ->" "$(t wag-h-c)"
             echo "  webapp-gen -h               ->  Help menu"
             echo ""
