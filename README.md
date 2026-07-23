@@ -122,9 +122,9 @@ Change language `pl/en` and default icon path. Stored in `~/.config/webapp-gen/c
 On first run:
 
 ```
- ╔════════════════════════════════════════╗
- ║          webapp-gen - FIRST RUN        ║
- ╚════════════════════════════════════════╝
+ =======================-------- 
+ ===   webapp-gen - FIRST RUN 
+ ==================== + + v0.9.9 
 
  Select language / Wybierz język:
   1. Polski
@@ -147,13 +147,13 @@ On first run:
   webapp-gen -list            ->  List + details e/r/p/q 
   webapp-gen -edit            ->  Edit app 
   webapp-gen -remove          ->  Delete app 
-  webapp-gen -name-i nazwa    ->  App info by name 
-  webapp-gen -name-e nazwa    ->  Edit app by name 
-  webapp-gen -name-r nazwa    ->  Delete app by name 
+  webapp-gen -info name       ->  App info by name 
+  webapp-gen -name-e name     ->  Edit app by name 
+  webapp-gen -name-r name     ->  Delete app by name 
   webapp-gen -config          ->  Configuration 
-  webapp-gen -h/--help/help   ->  Help menu
+  webapp-gen -h               ->  Help menu
 
-  VERSION:                    -> v0.9.8 
+  VERSION:                    -> v0.9.9 
 ```
 
 ## Where files are stored
