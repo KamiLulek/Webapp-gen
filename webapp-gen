@@ -13,8 +13,17 @@ init_globals() {
     CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
     CONFIG_FILE="${CONFIG_DIR}/config.cfg"
     APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
-    VERSION="v1.0"
+    VER="1.0"
+    VERSION="v${VER}"
     VERSION_PLUS="+ + + ${VERSION}"
+
+    # --- Update ---
+    REPO_OWNER="KamiLulek"
+    REPO_NAME="Webapp-gen"
+    REPO_BRANCH="main"
+    REPO_RAW_URL="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/webapp-gen"
+    UPDATE_CACHE_FILE="${CONFIG_DIR}/.last_update_check"
+    UPDATE_CHECK_INTERVAL=86400   # 24h, żeby nie odpytywać githuba za każdym uruchomieniem
 }
 
 # ----------------
@@ -175,8 +184,19 @@ t() {
             "wag-h-name-e") echo " Edit app by name " ;;
             "wag-h-name-r") echo " Delete app by name " ;;
             "wag-h-c") echo " Configuration " ;;
+            "wag-h-update") echo " Check for updates / update " ;;
             "help-unknow") echo " Unknown option: " ;;
             "help-info") echo " Use 'webapp-gen -h' for help. " ;;
+            "update_notice") echo " >>> New version available: %s  (run: webapp-gen -update)" ;;
+            "update_checking") echo " Checking for updates..." ;;
+            "update_no_curl") echo " Error: 'curl' is required for updates." ;;
+            "update_check_failed") echo " Error: could not check the remote version (no internet? repo unreachable?)." ;;
+            "update_uptodate") echo " You already have the latest version (%s)." ;;
+            "update_available") echo " New version available: %s -> %s" ;;
+            "update_confirm") echo " Update now? [Y/n]: " ;;
+            "update_cancelled") echo " Update cancelled." ;;
+            "update_done") echo " Updated to version %s. Restart webapp-gen." ;;
+            "update_download_failed") echo " Error: download failed or file looks invalid." ;;
         esac
     else
         case "$key" in
@@ -267,8 +287,19 @@ t() {
             "wag-h-name-e") echo " edytuj appkę po nazwie " ;;
             "wag-h-name-r") echo " usuń appkę po nazwie " ;;
             "wag-h-c") echo " konfiguracja " ;;
+            "wag-h-update") echo " sprawdź / zainstaluj aktualizację " ;;
             "help-unknow") echo " Nieznana opcja: " ;;
             "help-info") echo " Użyj 'webapp-gen -h' dla pomocy. " ;;
+            "update_notice") echo " >>> Dostępna nowa wersja: %s  (uruchom: webapp-gen -update)" ;;
+            "update_checking") echo " Sprawdzam dostępność aktualizacji..." ;;
+            "update_no_curl") echo " Błąd: do aktualizacji wymagany jest 'curl'." ;;
+            "update_check_failed") echo " Błąd: nie udało się sprawdzić wersji zdalnej (brak neta? repo niedostępne?)." ;;
+            "update_uptodate") echo " Masz już najnowszą wersję (%s)." ;;
+            "update_available") echo " Dostępna nowa wersja: %s -> %s" ;;
+            "update_confirm") echo " Zaktualizować teraz? [Y/n]: " ;;
+            "update_cancelled") echo " Aktualizacja anulowana." ;;
+            "update_done") echo " Zaktualizowano do wersji %s. Uruchom webapp-gen ponownie." ;;
+            "update_download_failed") echo " Błąd: pobieranie nie powiodło się lub plik wygląda na uszkodzony." ;;
         esac
     fi
 }
@@ -688,6 +719,101 @@ cmd_list_plain() {
 }
 
 # ----------------
+#          Zwraca numer wersji z pliku pod REPO_RAW_URL (bez pobierania całości do dysku)      /       Returns the version number from the file at REPO_RAW_URL (without saving it to disk)
+# -----------------
+get_remote_version() {
+    local timeout="${1:-5}"
+    curl -fsSL --max-time "$timeout" "$REPO_RAW_URL" 2>/dev/null \
+        | grep -m1 -E '^[[:space:]]*VER=' \
+        | sed -E 's/^[[:space:]]*VER="?([^"]*)"?.*/\1/'
+}
+
+# ----------------
+#          Porównuje wersje (sort -V) - zwraca 0 jeśli $1 > $2      /       Compares versions (sort -V) - returns 0 if $1 > $2
+# -----------------
+version_gt() {
+    [[ -z "$1" || -z "$2" ]] && return 1
+    [[ "$1" == "$2" ]] && return 1
+    [[ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n1)" == "$1" ]]
+}
+
+# ----------------
+#          Ciche sprawdzenie w tle (max raz na UPDATE_CHECK_INTERVAL) - pokazuje info w menu głównym      /       Silent background check (max once per UPDATE_CHECK_INTERVAL) - shows a notice in the main menu
+# -----------------
+maybe_notify_update() {
+    command -v curl &>/dev/null || return 0
+    local now last_check
+    now=$(date +%s)
+    if [[ -f "$UPDATE_CACHE_FILE" ]]; then
+        last_check=$(cat "$UPDATE_CACHE_FILE" 2>/dev/null)
+        if [[ "$last_check" =~ ^[0-9]+$ ]] && (( now - last_check < UPDATE_CHECK_INTERVAL )); then
+            return 0
+        fi
+    fi
+    local remote_ver
+    remote_ver=$(get_remote_version 2)
+    echo "$now" > "$UPDATE_CACHE_FILE" 2>/dev/null
+    if version_gt "$remote_ver" "$VER"; then
+        printf "$(t update_notice)\n\n" "$remote_ver"
+    fi
+}
+
+# ----------------
+#          Sprawdza i wykonuje aktualizację skryptu z GitHuba      /       Checks for and performs the script update from GitHub
+# -----------------
+cmd_update() {
+    echo ""
+    echo "$(t update_checking)"
+    if ! command -v curl &>/dev/null; then
+        echo "$(t update_no_curl)"
+        return 1
+    fi
+
+    local remote_ver
+    remote_ver=$(get_remote_version 10)
+    date +%s > "$UPDATE_CACHE_FILE" 2>/dev/null
+
+    if [[ -z "$remote_ver" ]]; then
+        echo "$(t update_check_failed)"
+        return 1
+    fi
+
+    if ! version_gt "$remote_ver" "$VER"; then
+        printf "$(t update_uptodate)\n" "$VER"
+        return 0
+    fi
+
+    printf "$(t update_available)\n" "$VER" "$remote_ver"
+    local confirm
+    read -p "$(t update_confirm)" confirm
+    if [[ "$confirm" =~ ^[Nn]$ ]]; then
+        echo "$(t update_cancelled)"
+        return 0
+    fi
+
+    local script_path tmpfile
+    script_path="$(readlink -f "$0")"
+    tmpfile=$(mktemp)
+
+    if curl -fsSL --max-time 20 "$REPO_RAW_URL" -o "$tmpfile" \
+        && [[ -s "$tmpfile" ]] \
+        && head -n1 "$tmpfile" | grep -q '^#!/bin/bash'; then
+        chmod +x "$tmpfile"
+        if [[ -w "$script_path" ]]; then
+            mv "$tmpfile" "$script_path"
+        else
+            need_pkexec
+            pkexec mv "$tmpfile" "$script_path"
+        fi
+        printf "$(t update_done)\n" "$remote_ver"
+    else
+        rm -f "$tmpfile"
+        echo "$(t update_download_failed)"
+        return 1
+    fi
+}
+
+# ----------------
 #          Edytuje globalną konfigurację - język i ścieżkę ikon      /       Edits global configuration - language and icon path
 # -----------------
 cmd_config() {
@@ -712,6 +838,7 @@ main_menu() {
     printf "\n$(t separator_up)"
     printf "\n$(t menu_title)"
     printf "\n$(t separator_down)\n\n"
+    maybe_notify_update
     echo "$(t menu_install)"
     echo "$(t menu_list)"
     echo "$(t menu_config)"
@@ -777,6 +904,7 @@ handle_cli_args() {
             fi
             ;;
         -config) cmd_config ;;
+        -update) cmd_update ;;
         -info)
             local n="$2"
             if [[ -z "$n" ]] || [[ ! -f "${APPS_CONFIG_DIR}/${n}.cfg" ]]; then
@@ -813,6 +941,7 @@ handle_cli_args() {
             echo "  webapp-gen -name-e name     ->" "$(t wag-h-name-e)"
             echo "  webapp-gen -name-r name     ->" "$(t wag-h-name-r)"
             echo "  webapp-gen -config          ->" "$(t wag-h-c)"
+            echo "  webapp-gen -update          ->" "$(t wag-h-update)"
             echo "  webapp-gen -h               ->  Help menu"
             echo ""
             echo "  VERSION:                    ->" "$(t version_title)"
