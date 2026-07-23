@@ -1,9 +1,9 @@
 #!/bin/bash
-# webapp-gen — generator appek webowych (chromium --app)
+# webapp-gen — web app generator (chromium --app)
 set -e
 
 # ----------------
-#          Inicjalizuje globalne ścieżki i zmienne
+#          Inicjalizuje globalne ścieżki i zmienne      /       Initializes global paths and variables
 # -----------------
 init_globals() {
     USER_HOME="$HOME"
@@ -13,19 +13,19 @@ init_globals() {
     CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
     CONFIG_FILE="${CONFIG_DIR}/config.cfg"
     APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
-    VERSION="v0.9.8"
+    VERSION="v0.9.9"
     VERSION_PLUS="+ + ${VERSION}"
 }
 
 # ----------------
-#          Tworzy wszystkie wymagane katalogi
+#          Tworzy wszystkie wymagane katalogi      /       Creates all required directories
 # -----------------
 ensure_dirs() {
     mkdir -p "$CONFIG_DIR" "$APPS_CONFIG_DIR" "$WRAPPER_DIR" "$DESKTOP_DIR" "$ICON_DIR"
 }
 
 # ----------------
-#          Ładuje język i config, jeśli brak to odpala first_time_config
+#          Ładuje język i config, jeśli brak to odpala first_time_config      /       Loads the language and config; if missing, runs first_time_config
 # -----------------
 load_lang() {
     LANG_CHOICE="pl"
@@ -40,7 +40,7 @@ load_lang() {
 }
 
 # ----------------
-#          Pierwsze uruchomienie - wybór języka i domyślnej ścieżki ikon
+#          Pierwsze uruchomienie - wybór języka i domyślnej ścieżki ikon      /       First run - selects the language and default icon path
 # -----------------
 first_time_config() {
     clear
@@ -71,7 +71,7 @@ first_time_config() {
 }
 
 # ----------------
-#          Zapisuje aktualną konfigurację do pliku
+#          Zapisuje aktualną konfigurację do pliku      /        Saves the current configuration to a file
 # -----------------
 save_config() {
     cat > "$CONFIG_FILE" << EOF
@@ -82,7 +82,7 @@ EOF
 }
 
 # ----------------
-#          System tłumaczeń - zwraca tekst na podstawie klucza
+#          System tłumaczeń - zwraca tekst na podstawie klucza      /       Translation system - returns text based on a key
 # -----------------
 t() {
     local key="$1"; shift
@@ -274,7 +274,7 @@ t() {
 }
 
 # ----------------
-#          Sprawdza czy pkexec jest dostępne
+#          Sprawdza czy pkexec jest dostępne      /       Checks if pkexec is available
 # -----------------
 need_pkexec() {
     if ! command -v pkexec &>/dev/null; then
@@ -284,7 +284,7 @@ need_pkexec() {
 }
 
 # ----------------
-#          Pyta o pojedynczą flagę chromium (helper)
+#          Pyta o pojedynczą flagę chromium (helper)      /       Queries for a single chromium flag (helper)
 # -----------------
 ask_single_flag() {
     local key="$1"
@@ -299,7 +299,7 @@ ask_single_flag() {
 }
 
 # ----------------
-#          Pyta o wszystkie flagi chromium
+#          Pyta o wszystkie flagi chromium      /       Queries for all chromium flags
 # -----------------
 ask_flags() {
     local flags=()
@@ -317,7 +317,7 @@ ask_flags() {
 }
 
 # ----------------
-#          Obsługuje edycję custom flag w trybie ENTER/n/c
+#          Obsługuje edycję custom flag w trybie ENTER/n/c      /       Supports editing custom flags in ENTER/n/c mode
 # -----------------
 handle_custom_flags_edit() {
     local current_flags="$1"
@@ -353,7 +353,7 @@ handle_custom_flags_edit() {
 }
 
 # ----------------
-#          Rozwiązuje ścieżkę do ikony (absolutna lub z DEFAULT_ICON_PATH)
+#          Rozwiązuje ścieżkę do ikony (absolutna lub z DEFAULT_ICON_PATH)      /       Resolves the icon path (absolute or from DEFAULT_ICON_PATH)
 # -----------------
 resolve_icon_path() {
     local input="$1"
@@ -365,7 +365,7 @@ resolve_icon_path() {
 }
 
 # ----------------
-#          Kopiuje ikonę do magazynu ICON_DIR
+#          Kopiuje ikonę do magazynu ICON_DIR      /       Copies the icon to the ICON_DIR store
 # -----------------
 copy_icon_to_storage() {
     local src="$1"
@@ -377,7 +377,7 @@ copy_icon_to_storage() {
 }
 
 # ----------------
-#          Zapisuje wrapper, .desktop i config appki
+#          Zapisuje wrapper, .desktop i config appki      /       Saves the app's wrapper, .desktop, and config
 # -----------------
 write_app_files() {
     local NAME="$1" URL="$2" ICON_LINE="$3" FLAGS="$4" CUSTOM_FLAGS="$5"
@@ -419,7 +419,7 @@ EOF
 }
 
 # ----------------
-#          Pobiera listę wszystkich appek do tablicy APPS
+#          Pobiera listę wszystkich appek do tablicy APPS      /       Fetches a list of all apps to the APPS array
 # -----------------
 get_all_apps() {
     APPS=()
@@ -433,7 +433,7 @@ get_all_apps() {
 }
 
 # ----------------
-#          Zwraca nazwę appki po indeksie
+#          Zwraca nazwę appki po indeksie      /       Returns the app name by index
 # -----------------
 get_app_name_by_index() {
     local idx="$1"
@@ -441,7 +441,7 @@ get_app_name_by_index() {
 }
 
 # ----------------
-#          Wyświetla szczegółowe info o jednej appce
+#          Wyświetla szczegółowe info o jednej appce      /       Displays detailed information about a single app
 # -----------------
 show_app_info() {
     local NAME="$1"
@@ -479,7 +479,7 @@ show_app_details() {
 }
 
 # ----------------
-#          Edytuje konkretną apkę podaną z nazwy (używane z widoku szczegółów)
+#          Edytuje konkretną apkę podaną z nazwy (używane z widoku szczegółów)      /       Edits a specific app given by name (used from the view) details)
 # -----------------
 edit_app_direct() {
     local NAME="$1"
@@ -515,7 +515,7 @@ edit_app_direct() {
 }
 
 # ----------------
-#          Usuwa konkretną apkę podaną z nazwy (z potwierdzeniem)
+#          Usuwa konkretną apkę podaną z nazwy (z potwierdzeniem)      /       Removes a specific app specified by name (with confirmation)
 # -----------------
 remove_app_direct() {
     local NAME="$1"
@@ -531,7 +531,7 @@ remove_app_direct() {
 }
 
 # ----------------
-#          Instaluje nową apkę - pyta o nazwę, URL, flagi i ikonę
+#          Instaluje nową apkę - pyta o nazwę, URL, flagi i ikonę      /       Installs a new app - asks for name, URL, flags, and icon
 # -----------------
 cmd_install() {
     printf "\n$(t separator_up)"
@@ -578,7 +578,7 @@ cmd_install() {
 }
 
 # ----------------
-#          Nowe: Lista z widokiem szczegółów i akcjami e/r/p/q
+#          Lista z widokiem szczegółów i akcjami e/r/p/q      /       List with details view and e/r/p/q actions
 # -----------------
 cmd_list() {
     while true; do
@@ -665,7 +665,7 @@ cmd_list() {
 }
 
 # ----------------
-#          Wersja CLI: sama lista bez okna wyboru
+#          Lista CLI: sama lista bez okna wyboru      /       CLI List: list only, no selection window
 # -----------------
 cmd_list_plain() {
     get_all_apps
@@ -686,7 +686,7 @@ cmd_list_plain() {
 }
 
 # ----------------
-#          Edytuje globalną konfigurację - język i ścieżkę ikon
+#          Edytuje globalną konfigurację - język i ścieżkę ikon      /       Edits global configuration - language and icon path
 # -----------------
 cmd_config() {
     clear
@@ -703,7 +703,7 @@ cmd_config() {
 }
 
 # ----------------
-#          Wyświetla główne menu 1-4 i obsługuje wybór
+#          Wyświetla główne menu 1-4 i obsługuje wybór      /       Displays main menu 1-4 and handles selection
 # -----------------
 main_menu() {
     clear
@@ -732,7 +732,7 @@ main_menu() {
 }
 
 # ----------------
-#          Główna pętla interaktywna
+#          Główna pętla interaktywna      /       Main interactive loop
 # -----------------
 main_loop() {
     while true; do
@@ -749,7 +749,7 @@ main_loop() {
 }
 
 # ----------------
-#          Obsługuje argumenty CLI
+#          Obsługuje argumenty CLI      /       Handles CLI arguments
 # -----------------
 handle_cli_args() {
     case "$1" in
@@ -811,6 +811,7 @@ handle_cli_args() {
             echo "  webapp-gen -name-e nazwa    ->" "$(t wag-h-name-e)"
             echo "  webapp-gen -name-r nazwa    ->" "$(t wag-h-name-r)"
             echo "  webapp-gen -config          ->" "$(t wag-h-c)"
+            echo "  webapp-gen -h               ->  Help menu"
             echo ""
             echo "  VERSION:                    ->" "$(t version_title)"
             echo ""
@@ -821,7 +822,7 @@ handle_cli_args() {
 }
 
 # ----------------
-#          Punkt wejścia programu
+#          Punkt wejścia programu      /       Program entry point
 # -----------------
 main() {
     init_globals
