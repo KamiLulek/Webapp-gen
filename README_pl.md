@@ -146,18 +146,18 @@ Przy pierwszym uruchomieniu:
 ### Skróty CLI
 
 ```bash
-  Użycie:
-  webapp-gen                  ->  interaktywne menu (1-4)
+  Użycie: 
+  webapp-gen                  ->  interaktywne menu (1-4) 
   webapp-gen -list            ->  lista + szczegóły e/r/p/q 
   webapp-gen -edit            ->  edytuj appkę 
   webapp-gen -remove          ->  usuń appkę 
-  webapp-gen -name-i nazwa    ->  info o appce po nazwie 
-  webapp-gen -name-e nazwa    ->  edytuj appkę po nazwie 
-  webapp-gen -name-r nazwa    ->  usuń appkę po nazwie 
+  webapp-gen -info name       ->  info o appce po nazwie 
+  webapp-gen -name-e name     ->  edytuj appkę po nazwie 
+  webapp-gen -name-r name     ->  usuń appkę po nazwie 
   webapp-gen -config          ->  konfiguracja 
-  webapp-gen -h/--help/help   ->  Help menu
+  webapp-gen -h               ->  Help menu
 
-  VERSION:                    -> v0.9.8 
+  VERSION:                    -> v0.9.9  
 ```
 
 ## Gdzie są pliki
