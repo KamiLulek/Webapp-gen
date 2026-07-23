@@ -19,8 +19,6 @@ Create isolated web apps from any website using Chromium in `--app` mode. Each a
 
 ## Installation
 
-No root, no `pkexec`, no polkit required.
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/KamiLulek/Webapp-gen/main/install.sh | bash
 ```
