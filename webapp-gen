@@ -13,7 +13,7 @@ init_globals() {
     CONFIG_DIR="${USER_HOME}/.config/webapp-gen"
     CONFIG_FILE="${CONFIG_DIR}/config.cfg"
     APPS_CONFIG_DIR="${CONFIG_DIR}/apps"
-    VER="1.0"
+    VER="1.1"
     VERSION="v${VER}"
     VERSION_PLUS="+ + + ${VERSION}"
 
